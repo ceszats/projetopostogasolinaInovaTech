@@ -2,7 +2,7 @@ import React from 'react';
 import { View, Text, Pressable, StyleSheet } from 'react-native';
 import { useRouter } from 'expo-router';
 import { IconSymbol } from '@/components/ui/icon-symbol';
-import { useColors } from '@/hooks/use-colors';
+import { useTheme } from '@/hooks/use-theme';
 import { useApp } from '@/context/AppContext';
 import {
   Station,
@@ -25,7 +25,7 @@ interface StationCardProps {
 }
 
 export function StationCard({ station, fuelType = 'gasolina', showDistance = true, compact = false }: StationCardProps) {
-  const colors = useColors();
+  const { colors, tokens } = useTheme();
   const router = useRouter();
   const { state, dispatch } = useApp();
 
@@ -63,10 +63,11 @@ export function StationCard({ station, fuelType = 'gasolina', showDistance = tru
       style={({ pressed }) => [
         styles.card,
         {
-          backgroundColor: (colors as any).card ?? colors.surface,
-          borderColor: colors.border,
+          backgroundColor: colors.surface,
           opacity: pressed ? 0.85 : 1,
           transform: [{ scale: pressed ? 0.985 : 1 }],
+          borderRadius: tokens.radius.md,
+          ...tokens.shadows.soft,
         },
         compact && styles.compact,
       ]}
@@ -179,17 +180,10 @@ export function StationCard({ station, fuelType = 'gasolina', showDistance = tru
 
 const styles = StyleSheet.create({
   card: {
-    borderRadius: 16,
-    borderWidth: 1,
     marginHorizontal: 16,
-    marginVertical: 5,
+    marginVertical: 6,
     overflow: 'hidden',
     flexDirection: 'row',
-    shadowColor: '#C21A2C',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.08,
-    shadowRadius: 6,
-    elevation: 3,
   },
   compact: {
     marginHorizontal: 0,
@@ -200,8 +194,8 @@ const styles = StyleSheet.create({
   },
   content: {
     flex: 1,
-    padding: 12,
-    gap: 8,
+    padding: 16,
+    gap: 10,
   },
   headerRow: {
     flexDirection: 'row',

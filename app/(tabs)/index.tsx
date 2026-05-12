@@ -10,7 +10,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { ScreenContainer } from '@/components/screen-container';
 import { IconSymbol } from '@/components/ui/icon-symbol';
 import { FuelTypeFilter } from '@/components/FuelTypeFilter';
-import { useColors } from '@/hooks/use-colors';
+import { useTheme } from '@/hooks/use-theme';
 import { useApp } from '@/context/AppContext';
 import { useRouter } from 'expo-router';
 import {
@@ -22,13 +22,15 @@ import {
   isOutdated,
   FuelType,
   Station,
+  calculateDistance,
 } from '@/data/stations';
 import * as Haptics from 'expo-haptics';
 import Map from '@/components/map';
+import { Linking, Platform } from 'react-native';
 
 export default function MapScreen() {
   const insets = useSafeAreaInsets();
-  const colors = useColors();
+  const { colors, tokens } = useTheme();
   const router = useRouter();
   const { state, dispatch } = useApp();
   const mapRef = useRef<any>(null);
@@ -122,77 +124,166 @@ export default function MapScreen() {
         <IconSymbol name="location.fill" size={22} color={colors.primary} />
       </Pressable>
 
-      {/* Bottom sheet for selected station — TouchableWithoutFeedback impede
-           que toques internos "vazem" para o mapa abaixo e quebrem o X */}
-      {selectedStation && (
-        <TouchableWithoutFeedback>
-          <View
-            style={[
+      {/* Bottom sheet de prévia do posto */}
+      {selectedStation && (() => {
+        const price = selectedStation.prices.find(p => p.type === fuelType);
+        const cat = price ? getPriceCategory(price.price) : 'medium';
+        const priceColor = getPriceCategoryColor(cat);
+        const outdated = price ? isOutdated(price.updatedAt) : false;
+        const isFav = state.favoriteIds.includes(selectedStation.id);
+
+        const brandColors: Record<string, string> = {
+          'Ipiranga': '#FF6B00', 'Shell': '#DD1D21', 'BR': '#009B3A',
+          'Ale': '#0066CC', 'Bandeirante': '#6B21A8', 'Raízen': '#DD1D21',
+        };
+        const brandColor = brandColors[selectedStation.brand] ?? colors.primary;
+
+        const handleDirections = () => {
+          const url = Platform.OS === 'ios'
+            ? `maps://app?daddr=${selectedStation.latitude},${selectedStation.longitude}`
+            : `geo:${selectedStation.latitude},${selectedStation.longitude}?q=${encodeURIComponent(selectedStation.name)}`;
+          Linking.openURL(url).catch(() =>
+            Linking.openURL(`https://www.google.com/maps/dir/?api=1&destination=${selectedStation.latitude},${selectedStation.longitude}`)
+          );
+        };
+
+        const handleToggleFav = () => {
+          Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+          dispatch({ type: 'TOGGLE_FAVORITE', stationId: selectedStation.id });
+        };
+
+        return (
+          <TouchableWithoutFeedback>
+            <View style={[
               styles.bottomSheet,
               {
-                backgroundColor: colors.card ?? colors.background,
-                borderColor: colors.border,
-                paddingBottom: insets.bottom + 12,
+                backgroundColor: colors.surface,
+                paddingBottom: insets.bottom + 10,
+                borderRadius: tokens.radius.lg,
+                shadowColor: '#000',
+                shadowOffset: { width: 0, height: -6 },
+                shadowOpacity: 0.12,
+                shadowRadius: 16,
+                elevation: 12,
               },
-            ]}
-          >
-            {/* Handle + botão fechar no topo */}
-            <View style={styles.bsTopRow}>
-              <View style={[styles.bottomSheetHandle, { backgroundColor: colors.border }]} />
-              <Pressable
-                hitSlop={12}
-                onPress={() => setSelectedStation(null)}
-                style={({ pressed }) => [
-                  styles.bsCloseBtn,
-                  { backgroundColor: colors.surface, borderColor: colors.border, opacity: pressed ? 0.6 : 1 },
-                ]}
-              >
-                <IconSymbol name="xmark" size={15} color={colors.foreground} />
-              </Pressable>
-            </View>
+            ]}>
 
-            <View style={styles.bottomSheetContent}>
-              <View style={{ flex: 1 }}>
-                {/* Nome + endereço */}
-                <Text style={[styles.bsName, { color: colors.foreground }]} numberOfLines={1}>
-                  {selectedStation.name}
-                </Text>
-                <Text style={[styles.bsAddr, { color: colors.muted }]} numberOfLines={1}>
-                  {selectedStation.neighborhood} · {selectedStation.address}
-                </Text>
-                {(() => {
-                  const price = selectedStation.prices.find(p => p.type === fuelType);
-                  if (!price) return null;
-                  const cat = getPriceCategory(price.price);
-                  const pc = getPriceCategoryColor(cat);
-                  return (
-                    <View style={styles.bsPriceRow}>
-                      <View style={[styles.bsPriceBadge, { backgroundColor: pc + '20' }]}>
-                        <Text style={[styles.bsPrice, { color: pc }]}>R$ {price.price.toFixed(2)}</Text>
-                      </View>
-                      <Text style={[styles.bsTime, { color: colors.muted }]}>
-                        {formatTimeAgo(price.updatedAt)} · {price.confirmations} confirmações
-                      </Text>
-                    </View>
-                  );
-                })()}
+              {/* Faixa da marca */}
+              <View style={[styles.bsBrandStrip, { backgroundColor: brandColor }]} />
+
+              {/* Handle row: [handle] [fav] [fechar] */}
+              <View style={styles.bsTopRow}>
+                <View style={[styles.bottomSheetHandle, { backgroundColor: colors.border }]} />
+
+                {/* Botão favoritar */}
+                <Pressable
+                  onPress={handleToggleFav}
+                  hitSlop={8}
+                  style={({ pressed }) => [
+                    styles.bsIconBtn,
+                    {
+                      backgroundColor: isFav ? '#EF444415' : colors.background,
+                      borderColor: isFav ? '#EF4444' : colors.border,
+                      opacity: pressed ? 0.7 : 1,
+                    },
+                  ]}
+                >
+                  <IconSymbol name="heart.fill" size={14} color={isFav ? '#EF4444' : colors.muted} />
+                </Pressable>
+
+                {/* Botão fechar */}
+                <Pressable
+                  hitSlop={12}
+                  onPress={() => setSelectedStation(null)}
+                  style={({ pressed }) => [
+                    styles.bsIconBtn,
+                    { backgroundColor: colors.background, borderColor: colors.border, opacity: pressed ? 0.6 : 1 },
+                  ]}
+                >
+                  <IconSymbol name="xmark" size={12} color={colors.muted} />
+                </Pressable>
               </View>
 
-              {/* Botão principal */}
-              <Pressable
-                onPress={() => handleViewDetail(selectedStation)}
-                style={({ pressed }) => [
-                  styles.bsBtnPrimary,
-                  { backgroundColor: colors.primary, opacity: pressed ? 0.85 : 1 },
-                ]}
-              >
-                <Text style={styles.bsBtnText}>Ver detalhes</Text>
-                <IconSymbol name="chevron.right" size={16} color="#fff" />
-              </Pressable>
+              {/* Corpo principal */}
+              <View style={styles.bsBody}>
+                {/* Linha de nome + favorito */}
+                {/* Nome e endereço */}
+                <View>
+                  <Text style={[styles.bsName, { color: colors.foreground }]} numberOfLines={1}>
+                    {selectedStation.name}
+                  </Text>
+                  <Text style={[styles.bsAddr, { color: colors.muted }]} numberOfLines={1}>
+                    {selectedStation.brand} · {selectedStation.neighborhood}
+                  </Text>
+                </View>
+
+                {/* Preço + chips em linha */}
+                {price ? (
+                  <View style={styles.bsPriceRow}>
+                    <View style={[styles.bsPricePill, { backgroundColor: priceColor + '18' }]}>
+                      <Text style={[styles.bsPriceMain, { color: priceColor }]}>
+                        R$ {price.price.toFixed(2)}
+                      </Text>
+                      <Text style={[styles.bsPriceLabel, { color: priceColor + 'BB' }]}>/ L</Text>
+                    </View>
+
+                    <View style={styles.bsChips}>
+                      {outdated ? (
+                        <View style={[styles.bsMetaChip, { backgroundColor: colors.warning + '18' }]}>
+                          <IconSymbol name="exclamationmark.triangle.fill" size={9} color={colors.warning} />
+                          <Text style={[styles.bsMetaText, { color: colors.warning }]}>Desatualizado</Text>
+                        </View>
+                      ) : (
+                        <View style={[styles.bsMetaChip, { backgroundColor: colors.success + '18' }]}>
+                          <IconSymbol name="clock.fill" size={9} color={colors.success} />
+                          <Text style={[styles.bsMetaText, { color: colors.success }]}>{formatTimeAgo(price.updatedAt)}</Text>
+                        </View>
+                      )}
+                      <View style={[styles.bsMetaChip, { backgroundColor: colors.muted + '18' }]}>
+                        <IconSymbol name="person.2.fill" size={9} color={colors.muted} />
+                        <Text style={[styles.bsMetaText, { color: colors.muted }]}>{price.confirmations} confirm.</Text>
+                      </View>
+                    </View>
+                  </View>
+                ) : (
+                  <View style={[styles.bsNoPriceChip, { backgroundColor: colors.muted + '15' }]}>
+                    <Text style={[styles.bsMetaText, { color: colors.muted }]}>Sem preço cadastrado</Text>
+                  </View>
+                )}
+
+                {/* Botões de ação */}
+                <View style={styles.bsActions}>
+                  <Pressable
+                    onPress={handleDirections}
+                    style={({ pressed }) => [
+                      styles.bsBtnSecondary,
+                      { borderColor: colors.border, backgroundColor: colors.background, opacity: pressed ? 0.75 : 1 },
+                    ]}
+                  >
+                    <IconSymbol name="car.fill" size={14} color={colors.primary} />
+                    <Text style={[styles.bsBtnSecondaryText, { color: colors.primary }]}>Rotas</Text>
+                  </Pressable>
+
+                  <Pressable
+                    onPress={() => handleViewDetail(selectedStation)}
+                    style={({ pressed }) => [
+                      styles.bsBtnPrimary,
+                      {
+                        backgroundColor: colors.primary,
+                        opacity: pressed ? 0.85 : 1,
+                        ...tokens.shadows.premium,
+                      },
+                    ]}
+                  >
+                    <Text style={styles.bsBtnText}>Ver detalhes</Text>
+                    <IconSymbol name="chevron.right" size={14} color="#fff" />
+                  </Pressable>
+                </View>
+              </View>
             </View>
-          </View>
-        </TouchableWithoutFeedback>
-      )}
+          </TouchableWithoutFeedback>
+        );
+      })()}
     </View>
   );
 }
@@ -336,99 +427,131 @@ const styles = StyleSheet.create({
     bottom: 0,
     left: 0,
     right: 0,
-    borderTopLeftRadius: 20,
-    borderTopRightRadius: 20,
-    borderTopWidth: 1,
-    borderLeftWidth: 1,
-    borderRightWidth: 1,
     zIndex: 20,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: -4 },
-    shadowOpacity: 0.1,
-    shadowRadius: 8,
-    elevation: 8,
+    overflow: 'hidden',
+  },
+  bsBrandStrip: {
+    height: 5,
+    width: '100%',
   },
   bsTopRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    justifyContent: 'center',
-    paddingTop: 10,
-    paddingHorizontal: 16,
-    marginBottom: 2,
-    position: 'relative',
+    paddingHorizontal: 14,
+    paddingTop: 8,
+    paddingBottom: 6,
+    gap: 8,
   },
   bottomSheetHandle: {
-    width: 36,
+    flex: 1,
     height: 4,
     borderRadius: 2,
     alignSelf: 'center',
-    flex: 1,
   },
-  bsCloseBtn: {
-    position: 'absolute',
-    right: 16,
+  bsIconBtn: {
     width: 32,
     height: 32,
     borderRadius: 16,
-    borderWidth: 1,
+    borderWidth: 1.5,
     alignItems: 'center',
     justifyContent: 'center',
   },
-  bottomSheetContent: {
-    flexDirection: 'row',
-    alignItems: 'center',
+  bsBody: {
     paddingHorizontal: 16,
-    paddingTop: 6,
-    paddingBottom: 2,
-    gap: 12,
+    paddingBottom: 4,
+    gap: 10,
   },
   bsName: {
-    fontSize: 15,
-    fontWeight: '600',
-    lineHeight: 20,
+    fontSize: 16,
+    fontWeight: '700',
+    lineHeight: 21,
+    letterSpacing: -0.2,
   },
   bsAddr: {
     fontSize: 12,
-    lineHeight: 16,
-    marginTop: 2,
+    lineHeight: 17,
+    marginTop: 1,
   },
   bsPriceRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 8,
-    marginTop: 6,
+    gap: 10,
   },
-  bsPriceBadge: {
-    paddingHorizontal: 8,
-    paddingVertical: 3,
-    borderRadius: 6,
-  },
-  bsPrice: {
-    fontSize: 15,
-    fontWeight: '700',
-    lineHeight: 20,
-  },
-  bsTime: {
-    fontSize: 11,
-    lineHeight: 15,
-  },
-  bsActions: {
+  bsChips: {
+    flex: 1,
     flexDirection: 'row',
-    gap: 8,
+    gap: 6,
+    flexWrap: 'wrap',
     alignItems: 'center',
   },
-  bsBtnPrimary: {
+
+  bsPricePill: {
+    flexDirection: 'row',
+    alignItems: 'baseline',
+    gap: 4,
+    paddingHorizontal: 12,
+    paddingVertical: 7,
+    borderRadius: 12,
+    alignSelf: 'flex-start',
+  },
+  bsPriceMain: {
+    fontSize: 21,
+    fontWeight: '800',
+    lineHeight: 26,
+    letterSpacing: -0.5,
+  },
+  bsPriceLabel: {
+    fontSize: 12,
+    fontWeight: '500',
+    lineHeight: 17,
+  },
+
+  bsMetaChip: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 4,
-    paddingHorizontal: 16,
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: 999,
+  },
+  bsMetaText: {
+    fontSize: 11,
+    fontWeight: '600',
+    lineHeight: 15,
+  },
+  bsNoPriceChip: {
+    paddingHorizontal: 12,
     paddingVertical: 10,
-    borderRadius: 20,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.15,
-    shadowRadius: 4,
-    elevation: 3,
+    borderRadius: 12,
+    alignSelf: 'flex-start',
+  },
+  bsActions: {
+    flexDirection: 'row',
+    gap: 10,
+  },
+  bsBtnSecondary: {
+    flex: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 5,
+    paddingVertical: 11,
+    borderRadius: 12,
+    borderWidth: 1.5,
+  },
+  bsBtnSecondaryText: {
+    fontSize: 13,
+    fontWeight: '700',
+    lineHeight: 18,
+  },
+  bsBtnPrimary: {
+    flex: 2,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 5,
+    paddingVertical: 11,
+    borderRadius: 12,
   },
   bsBtnText: {
     color: '#fff',

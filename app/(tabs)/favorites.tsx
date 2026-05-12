@@ -11,7 +11,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { ScreenContainer } from '@/components/screen-container';
 import { StationCard } from '@/components/StationCard';
 import { IconSymbol } from '@/components/ui/icon-symbol';
-import { useColors } from '@/hooks/use-colors';
+import { useTheme } from '@/hooks/use-theme';
 import { useApp } from '@/context/AppContext';
 import {
   STATIONS,
@@ -25,7 +25,7 @@ import {
 import * as Haptics from 'expo-haptics';
 
 export default function FavoritesScreen() {
-  const colors = useColors();
+  const { colors, tokens } = useTheme();
   const insets = useSafeAreaInsets();
   const { state, dispatch } = useApp();
 
@@ -70,7 +70,10 @@ export default function FavoritesScreen() {
           <View style={[styles.priceChangeRow, { marginHorizontal: 16 }]}>
             <View style={[
               styles.priceChangeBadge,
-              { backgroundColor: priceChange < 0 ? colors.success + '15' : priceChange > 0 ? colors.error + '15' : colors.muted + '15' },
+              {
+                backgroundColor: priceChange < 0 ? colors.success + '15' : priceChange > 0 ? colors.error + '15' : colors.muted + '15',
+                borderRadius: tokens.radius.sm,
+              },
             ]}>
               <IconSymbol
                 name={priceChange < 0 ? 'arrow.down' : priceChange > 0 ? 'arrow.up' : 'checkmark'}
@@ -119,7 +122,7 @@ export default function FavoritesScreen() {
           <Text style={[styles.emptySub, { color: colors.muted }]}>
             Toque no ícone de coração em qualquer posto para salvá-lo aqui.
           </Text>
-          <View style={[styles.tipCard, { backgroundColor: colors.surface, borderColor: colors.border }]}>
+          <View style={[styles.tipCard, { backgroundColor: colors.surface, borderRadius: tokens.radius.md, ...tokens.shadows.soft }]}>
             <Text style={{ fontSize: 20 }}>💡</Text>
             <Text style={[styles.tipText, { color: colors.muted }]}>
               Postos favoritos mostram a variação de preço dos últimos 30 dias, para você acompanhar de perto.
@@ -182,7 +185,6 @@ const styles = StyleSheet.create({
     gap: 5,
     paddingHorizontal: 10,
     paddingVertical: 5,
-    borderRadius: 8,
     alignSelf: 'flex-start',
     marginLeft: 4,
   },
@@ -213,8 +215,6 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     gap: 10,
     padding: 14,
-    borderRadius: 14,
-    borderWidth: 1,
     marginTop: 8,
     alignItems: 'flex-start',
   },

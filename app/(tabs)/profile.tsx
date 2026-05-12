@@ -15,7 +15,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { ScreenContainer } from '@/components/screen-container';
 import { IconSymbol } from '@/components/ui/icon-symbol';
 import { GamificationBadge } from '@/components/GamificationBadge';
-import { useColors } from '@/hooks/use-colors';
+import { useTheme } from '@/hooks/use-theme';
 import { trpc } from '@/lib/trpc';
 import { useApp, PriceAlert } from '@/context/AppContext';
 import { STATIONS, FuelType, FUEL_TYPE_LABELS, FUEL_TYPE_ICONS } from '@/data/stations';
@@ -27,7 +27,7 @@ import * as Haptics from 'expo-haptics';
 const FUEL_TYPES: FuelType[] = ['gasolina', 'aditivada', 'etanol', 'diesel', 'gnv'];
 
 export default function ProfileScreen() {
-  const colors = useColors();
+  const { colors, tokens } = useTheme();
   const insets = useSafeAreaInsets();
   const { state, dispatch } = useApp();
   const { setColorScheme } = useThemeContext();
@@ -113,28 +113,45 @@ export default function ProfileScreen() {
     <ScreenContainer containerClassName="bg-background" edges={['top', 'left', 'right']}>
       <ScrollView contentContainerStyle={[styles.content, { paddingBottom: insets.bottom + 32 }]} showsVerticalScrollIndicator={false}>
         {/* Profile header */}
-        <View style={[styles.profileCard, { backgroundColor: colors.primary + '15', borderColor: colors.primary + '30' }]}>
-          <View style={[styles.avatar, { backgroundColor: colors.primary }]}>
-            <Text style={styles.avatarText}>🚗</Text>
-          </View>
-          <View style={{ flex: 1 }}>
-            <Text style={[styles.profileName, { color: colors.foreground }]}>
-              {state.user?.name ?? 'Motorista Manauara'}
-            </Text>
-            {reputation && (
-              <View style={{ marginTop: 4 }}>
-                <GamificationBadge 
-                  totalContributions={reputation.total} 
-                  confirmedContributions={reputation.confirmed}
-                  hideLabel={false}
-                />
+        <View style={[
+          styles.profileCard,
+          {
+            backgroundColor: colors.surface,
+            borderRadius: tokens.radius.lg,
+            ...tokens.shadows.medium,
+          }
+        ]}>
+          {/* Faixa decorativa de cor */}
+          <View style={[styles.profileCardAccent, { backgroundColor: colors.primary }]} />
+
+          <View style={styles.profileCardInner}>
+            {/* Avatar com ring */}
+            <View style={[styles.avatarRing, { borderColor: colors.primary + '40' }]}>
+              <View style={[styles.avatar, { backgroundColor: colors.primary }]}>
+                <Text style={styles.avatarText}>🚗</Text>
               </View>
-            )}
-            <Text style={[styles.profileSub, { color: colors.muted }]}>Contribuidor Abastece Manaus</Text>
-          </View>
-          <View style={[styles.contributionBadge, { backgroundColor: colors.primary }]}>
-            <Text style={styles.contributionCount}>{contributions.length}</Text>
-            <Text style={styles.contributionLabel}>contribuições</Text>
+            </View>
+
+            <View style={{ flex: 1 }}>
+              <Text style={[styles.profileName, { color: colors.foreground }]}>
+                {state.user?.name ?? 'Motorista Manauara'}
+              </Text>
+              <Text style={[styles.profileSub, { color: colors.muted }]}>Contribuidor Abastece Manaus</Text>
+              {reputation && (
+                <View style={{ marginTop: 6 }}>
+                  <GamificationBadge 
+                    totalContributions={reputation.total} 
+                    confirmedContributions={reputation.confirmed}
+                    hideLabel={false}
+                  />
+                </View>
+              )}
+            </View>
+
+            <View style={[styles.contributionBadge, { backgroundColor: colors.primary + '15' }]}>
+              <Text style={[styles.contributionCount, { color: colors.primary }]}>{contributions.length}</Text>
+              <Text style={[styles.contributionLabel, { color: colors.primary }]}>contribuições</Text>
+            </View>
           </View>
         </View>
 
@@ -155,7 +172,7 @@ export default function ProfileScreen() {
           </View>
 
           {alerts.length === 0 ? (
-            <View style={[styles.emptyAlerts, { backgroundColor: colors.surface, borderColor: colors.border }]}>
+            <View style={[styles.emptyAlerts, { backgroundColor: colors.surface, borderRadius: tokens.radius.md, ...tokens.shadows.soft }]}>
               <Text style={{ fontSize: 32 }}>🔔</Text>
               <Text style={[styles.emptyAlertsText, { color: colors.muted }]}>
                 Nenhum alerta criado. Crie um alerta para ser notificado quando o preço baixar.
@@ -167,7 +184,7 @@ export default function ProfileScreen() {
               return (
                 <View
                   key={alert.id}
-                  style={[styles.alertCard, { backgroundColor: colors.surface, borderColor: colors.border }]}
+                  style={[styles.alertCard, { backgroundColor: colors.surface, borderRadius: tokens.radius.md, ...tokens.shadows.soft }]}
                 >
                   <View style={[styles.alertIcon, { backgroundColor: colors.primary + '20' }]}>
                     <Text style={{ fontSize: 18 }}>{FUEL_TYPE_ICONS[alert.fuelType]}</Text>
@@ -207,7 +224,7 @@ export default function ProfileScreen() {
               return (
                 <View
                   key={i}
-                  style={[styles.contributionCard, { backgroundColor: colors.surface, borderColor: colors.border }]}
+                  style={[styles.contributionCard, { backgroundColor: colors.surface, borderRadius: tokens.radius.sm, ...tokens.shadows.soft }]}
                 >
                   <Text style={{ fontSize: 18 }}>{FUEL_TYPE_ICONS[c.fuelType]}</Text>
                   <View style={{ flex: 1 }}>
@@ -474,13 +491,26 @@ const styles = StyleSheet.create({
     paddingBottom: 32,
   },
   profileCard: {
+    marginBottom: 8,
+    overflow: 'hidden',
+  },
+  profileCardAccent: {
+    height: 6,
+    width: '100%',
+  },
+  profileCardInner: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 14,
-    padding: 16,
-    borderRadius: 16,
-    borderWidth: 1,
-    marginBottom: 8,
+    padding: 20,
+  },
+  avatarRing: {
+    width: 60,
+    height: 60,
+    borderRadius: 30,
+    borderWidth: 2,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   avatar: {
     width: 52,
@@ -494,7 +524,7 @@ const styles = StyleSheet.create({
     lineHeight: 30,
   },
   profileName: {
-    fontSize: 16,
+    fontSize: 17,
     fontWeight: '700',
     lineHeight: 21,
   },
@@ -505,18 +535,16 @@ const styles = StyleSheet.create({
   },
   contributionBadge: {
     alignItems: 'center',
-    paddingHorizontal: 12,
-    paddingVertical: 6,
-    borderRadius: 12,
+    paddingHorizontal: 14,
+    paddingVertical: 8,
+    borderRadius: 16,
   },
   contributionCount: {
-    color: '#fff',
     fontSize: 20,
     fontWeight: '800',
     lineHeight: 26,
   },
   contributionLabel: {
-    color: '#fff',
     fontSize: 10,
     lineHeight: 14,
   },
@@ -553,8 +581,6 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     gap: 12,
     padding: 16,
-    borderRadius: 14,
-    borderWidth: 1,
   },
   emptyAlertsText: {
     flex: 1,
@@ -565,9 +591,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: 10,
-    padding: 12,
-    borderRadius: 14,
-    borderWidth: 1,
+    padding: 14,
   },
   alertIcon: {
     width: 40,
@@ -594,8 +618,6 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     gap: 10,
     padding: 12,
-    borderRadius: 12,
-    borderWidth: 1,
   },
   contribStation: {
     fontSize: 13,

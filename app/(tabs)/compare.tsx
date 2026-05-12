@@ -13,7 +13,7 @@ import {
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { ScreenContainer } from '@/components/screen-container';
 import { IconSymbol } from '@/components/ui/icon-symbol';
-import { useColors } from '@/hooks/use-colors';
+import { useTheme } from '@/hooks/use-theme';
 import { useApp } from '@/context/AppContext';
 import {
   STATIONS,
@@ -32,7 +32,7 @@ const FUEL_TYPES: FuelType[] = ['gasolina', 'aditivada', 'etanol', 'diesel', 'gn
 const DEFAULT_TANK = 50; // litros
 
 export default function CompareScreen() {
-  const colors = useColors();
+  const { colors, tokens } = useTheme();
   const insets = useSafeAreaInsets();
   const { state, dispatch } = useApp();
   const [tankSize, setTankSize] = useState(DEFAULT_TANK);

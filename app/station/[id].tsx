@@ -13,7 +13,7 @@ import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import Svg, { Polyline, Circle, Line, Text as SvgText } from 'react-native-svg';
 import { IconSymbol } from '@/components/ui/icon-symbol';
-import { useColors } from '@/hooks/use-colors';
+import { useTheme } from '@/hooks/use-theme';
 import { useApp } from '@/context/AppContext';
 import {
   STATIONS,
@@ -105,7 +105,7 @@ export default function StationDetailScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const router = useRouter();
   const insets = useSafeAreaInsets();
-  const colors = useColors();
+  const { colors, tokens } = useTheme();
   const { state, dispatch } = useApp();
   const [selectedFuel, setSelectedFuel] = useState<FuelType>('gasolina');
 
@@ -194,7 +194,14 @@ export default function StationDetailScreen() {
   return (
     <View style={[styles.container, { backgroundColor: colors.background }]}>
       {/* Header */}
-      <View style={[styles.header, { paddingTop: insets.top + 8, backgroundColor: colors.background, borderBottomColor: colors.border }]}>
+      <View style={[
+        styles.header,
+        {
+          paddingTop: insets.top + 8,
+          backgroundColor: colors.background,
+          ...tokens.shadows.soft,
+        }
+      ]}>
         <Pressable
           onPress={() => router.back()}
           style={({ pressed }) => [styles.backBtn, { opacity: pressed ? 0.6 : 1 }]}
@@ -239,7 +246,7 @@ export default function StationDetailScreen() {
         )}
 
         {/* Info card */}
-        <View style={[styles.infoCard, { backgroundColor: colors.surface, borderColor: colors.border }]}>
+        <View style={[styles.infoCard, { backgroundColor: colors.surface, borderRadius: tokens.radius.md, ...tokens.shadows.soft }]}>
           <View style={styles.infoRow}>
             <IconSymbol name="location.fill" size={14} color={colors.muted} />
             <Text style={[styles.infoText, { color: colors.muted }]}>{station.address}, {station.neighborhood}</Text>
@@ -272,7 +279,7 @@ export default function StationDetailScreen() {
 
         {/* Preços */}
         <Text style={[styles.sectionTitle, { color: colors.foreground }]}>Preços</Text>
-        <View style={[styles.pricesCard, { backgroundColor: colors.surface, borderColor: colors.border }]}>
+        <View style={[styles.pricesCard, { backgroundColor: colors.surface, borderRadius: tokens.radius.md, ...tokens.shadows.soft }]}>
           {station.prices.map((p, i) => {
             const cat = getPriceCategory(p.price);
             const pc = getPriceCategoryColor(cat);
@@ -317,7 +324,7 @@ export default function StationDetailScreen() {
             <Text style={[styles.sectionTitle, { color: colors.foreground }]}>
               Histórico — {FUEL_TYPE_LABELS[selectedFuel]} (30 dias)
             </Text>
-            <View style={[styles.chartCard, { backgroundColor: colors.surface, borderColor: colors.border }]}>
+            <View style={[styles.chartCard, { backgroundColor: colors.surface, borderRadius: tokens.radius.md, ...tokens.shadows.soft }]}>
               <PriceHistoryChart history={history} color={priceColor} />
               <Text style={[styles.chartNote, { color: colors.muted }]}>
                 Variação: R$ {Math.min(...history.map(h => h.price)).toFixed(2)} — R$ {Math.max(...history.map(h => h.price)).toFixed(2)}
@@ -413,7 +420,11 @@ export default function StationDetailScreen() {
           onPress={handleDirections}
           style={({ pressed }) => [
             styles.directionsBtn,
-            { backgroundColor: colors.primary, opacity: pressed ? 0.85 : 1 },
+            {
+              backgroundColor: colors.primary,
+              opacity: pressed ? 0.85 : 1,
+              ...tokens.shadows.premium,
+            },
           ]}
         >
           <IconSymbol name="car.fill" size={16} color="#fff" />
@@ -444,8 +455,8 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     paddingHorizontal: 16,
     paddingBottom: 12,
-    borderBottomWidth: 0.5,
     gap: 12,
+    zIndex: 1,
   },
   backBtn: {
     width: 36,
@@ -477,11 +488,9 @@ const styles = StyleSheet.create({
     gap: 4,
   },
   infoCard: {
-    borderRadius: 14,
-    borderWidth: 1,
+    marginBottom: 8,
     padding: 14,
     gap: 8,
-    marginBottom: 8,
   },
   infoRow: {
     flexDirection: 'row',
@@ -517,8 +526,6 @@ const styles = StyleSheet.create({
     marginBottom: 8,
   },
   pricesCard: {
-    borderRadius: 14,
-    borderWidth: 1,
     overflow: 'hidden',
   },
   priceRow: {
@@ -567,8 +574,6 @@ const styles = StyleSheet.create({
     lineHeight: 15,
   },
   chartCard: {
-    borderRadius: 14,
-    borderWidth: 1,
     padding: 16,
     gap: 8,
   },

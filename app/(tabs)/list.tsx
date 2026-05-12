@@ -13,7 +13,7 @@ import { ScreenContainer } from '@/components/screen-container';
 import { StationCard } from '@/components/StationCard';
 import { FuelTypeFilter } from '@/components/FuelTypeFilter';
 import { IconSymbol } from '@/components/ui/icon-symbol';
-import { useColors } from '@/hooks/use-colors';
+import { useTheme } from '@/hooks/use-theme';
 import { useApp } from '@/context/AppContext';
 import {
   STATIONS,
@@ -37,7 +37,7 @@ const SORT_LABELS: Record<SortOption, string> = {
 const DISTANCE_OPTIONS = [2, 5, 10, 20, 50];
 
 export default function ListScreen() {
-  const colors = useColors();
+  const { colors, tokens } = useTheme();
   const insets = useSafeAreaInsets();
   const { state, dispatch } = useApp();
   const [searchQuery, setSearchQuery] = useState('');
@@ -133,7 +133,11 @@ export default function ListScreen() {
 
       {/* Barra de busca + filtros */}
       <View style={styles.searchRow}>
-        <View style={[styles.searchBox, { backgroundColor: colors.surface, borderColor: colors.border }]}>
+        <View style={[styles.searchBox, { 
+          backgroundColor: colors.surface, 
+          borderRadius: tokens.radius.sm,
+          ...tokens.shadows.soft 
+        }]}>
           <IconSymbol name="magnifyingglass" size={16} color={colors.muted} />
           <TextInput
             style={[styles.searchInput, { color: colors.foreground }]}
@@ -153,7 +157,12 @@ export default function ListScreen() {
           onPress={() => setShowFilters(true)}
           style={({ pressed }) => [
             styles.filterBtn,
-            { backgroundColor: colors.surface, borderColor: colors.border, opacity: pressed ? 0.8 : 1 },
+            { 
+              backgroundColor: colors.surface, 
+              opacity: pressed ? 0.8 : 1,
+              borderRadius: tokens.radius.sm,
+              ...tokens.shadows.soft 
+            },
           ]}
         >
           <IconSymbol name="slider.horizontal.3" size={18} color={colors.primary} />
@@ -170,12 +179,12 @@ export default function ListScreen() {
               styles.sortChip,
               {
                 backgroundColor: sortBy === sort ? colors.primary : colors.surface,
-                borderColor: sortBy === sort ? colors.primary : colors.border,
                 opacity: pressed ? 0.8 : 1,
+                ...(sortBy === sort ? tokens.shadows.premium : tokens.shadows.soft),
               },
             ]}
           >
-            <Text style={[styles.sortChipText, { color: sortBy === sort ? '#fff' : colors.foreground }]}>
+            <Text style={[styles.sortChipText, { color: sortBy === sort ? '#fff' : colors.muted }]}>
               {SORT_LABELS[sort]}
             </Text>
           </Pressable>
@@ -207,7 +216,13 @@ export default function ListScreen() {
   return (
     <ScreenContainer containerClassName="bg-background" edges={['top', 'left', 'right']}>
       {/* Header */}
-      <View style={[styles.header, { borderBottomColor: colors.border }]}>
+      <View style={[
+        styles.header,
+        {
+          backgroundColor: colors.background,
+          ...tokens.shadows.soft,
+        }
+      ]}>
         <Text style={[styles.headerTitle, { color: colors.foreground }]}>Postos</Text>
         <Text style={[styles.headerSub, { color: colors.muted }]}>Manaus, AM</Text>
       </View>
@@ -335,18 +350,19 @@ export default function ListScreen() {
 
 const styles = StyleSheet.create({
   header: {
-    paddingHorizontal: 16,
-    paddingTop: 12,
-    paddingBottom: 8,
-    borderBottomWidth: 0.5,
+    paddingHorizontal: 20,
+    paddingTop: 16,
+    paddingBottom: 12,
     flexDirection: 'row',
     alignItems: 'baseline',
     gap: 8,
+    zIndex: 1,
   },
   headerTitle: {
-    fontSize: 28,
-    fontWeight: '700',
-    lineHeight: 34,
+    fontSize: 30,
+    fontWeight: '800',
+    lineHeight: 36,
+    letterSpacing: -0.5,
   },
   headerSub: {
     fontSize: 14,
@@ -366,8 +382,6 @@ const styles = StyleSheet.create({
     gap: 8,
     paddingHorizontal: 12,
     paddingVertical: 10,
-    borderRadius: 12,
-    borderWidth: 1,
   },
   searchInput: {
     flex: 1,
@@ -378,8 +392,6 @@ const styles = StyleSheet.create({
   filterBtn: {
     width: 44,
     height: 44,
-    borderRadius: 12,
-    borderWidth: 1,
     alignItems: 'center',
     justifyContent: 'center',
   },
@@ -390,13 +402,12 @@ const styles = StyleSheet.create({
     paddingBottom: 8,
   },
   sortChip: {
-    paddingHorizontal: 12,
-    paddingVertical: 6,
-    borderRadius: 16,
-    borderWidth: 1.5,
+    paddingHorizontal: 16,
+    paddingVertical: 8,
+    borderRadius: 999,
   },
   sortChipText: {
-    fontSize: 12,
+    fontSize: 13,
     fontWeight: '600',
     lineHeight: 17,
   },
