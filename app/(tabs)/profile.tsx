@@ -9,6 +9,7 @@ import {
   TextInput,
   Platform,
   Switch,
+  KeyboardAvoidingView,
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { ScreenContainer } from '@/components/screen-container';
@@ -286,174 +287,180 @@ export default function ProfileScreen() {
         transparent
         onRequestClose={() => setShowNewAlert(false)}
       >
-        <View style={styles.modalOverlay}>
+        <KeyboardAvoidingView
+          behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+          style={styles.modalOverlay}
+        >
           <View style={[styles.alertSheet, { backgroundColor: colors.background, borderColor: colors.border, paddingBottom: insets.bottom + 20 }]}>
             <View style={styles.sheetHandle} />
-            <View style={styles.sheetHeader}>
-              <Text style={[styles.sheetTitle, { color: colors.foreground }]}>Novo Alerta de Preço</Text>
-              <Pressable onPress={() => setShowNewAlert(false)}>
-                <IconSymbol name="xmark" size={20} color={colors.muted} />
-              </Pressable>
-            </View>
-
-            <Text style={[styles.sheetSectionLabel, { color: colors.muted }]}>COMBUSTÍVEL</Text>
-            <View style={styles.fuelGrid}>
-              {FUEL_TYPES.map(type => (
-                <Pressable
-                  key={type}
-                  onPress={() => setAlertFuel(type)}
-                  style={({ pressed }) => [
-                    styles.fuelOption,
-                    {
-                      backgroundColor: alertFuel === type ? colors.primary + '15' : colors.surface,
-                      borderColor: alertFuel === type ? colors.primary : colors.border,
-                      opacity: pressed ? 0.8 : 1,
-                    },
-                  ]}
-                >
-                  <Text style={{ fontSize: 20 }}>{FUEL_TYPE_ICONS[type]}</Text>
-                  <Text style={[styles.fuelOptionText, { color: alertFuel === type ? colors.primary : colors.foreground }]}>
-                    {FUEL_TYPE_LABELS[type]}
-                  </Text>
+            
+            <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={{ gap: 10 }}>
+              <View style={styles.sheetHeader}>
+                <Text style={[styles.sheetTitle, { color: colors.foreground }]}>Novo Alerta de Preço</Text>
+                <Pressable onPress={() => setShowNewAlert(false)}>
+                  <IconSymbol name="xmark" size={20} color={colors.muted} />
                 </Pressable>
-              ))}
-            </View>
+              </View>
 
-            <Text style={[styles.sheetSectionLabel, { color: colors.muted }]}>PREÇO MÁXIMO</Text>
-            <View style={[styles.priceInputRow, { backgroundColor: colors.surface, borderColor: alertError ? colors.error : colors.border }]}>
-              <Text style={[styles.currencySymbol, { color: colors.muted }]}>R$</Text>
-              <TextInput
-                style={[styles.priceInput, { color: colors.foreground }]}
-                placeholder="0,00"
-                placeholderTextColor={colors.muted}
-                keyboardType="decimal-pad"
-                value={alertPrice}
-                onChangeText={v => { setAlertPrice(v); setAlertError(''); }}
-                returnKeyType="done"
-              />
-              <Text style={[styles.perLiter, { color: colors.muted }]}>/litro</Text>
-            </View>
-            {alertError ? (
-              <Text style={[styles.errorText, { color: colors.error }]}>{alertError}</Text>
-            ) : null}
+              <Text style={[styles.sheetSectionLabel, { color: colors.muted }]}>COMBUSTÍVEL</Text>
+              <View style={styles.fuelGrid}>
+                {FUEL_TYPES.map(type => (
+                  <Pressable
+                    key={type}
+                    onPress={() => setAlertFuel(type)}
+                    style={({ pressed }) => [
+                      styles.fuelOption,
+                      {
+                        backgroundColor: alertFuel === type ? colors.primary + '15' : colors.surface,
+                        borderColor: alertFuel === type ? colors.primary : colors.border,
+                        opacity: pressed ? 0.8 : 1,
+                      },
+                    ]}
+                  >
+                    <Text style={{ fontSize: 20 }}>{FUEL_TYPE_ICONS[type]}</Text>
+                    <Text style={[styles.fuelOptionText, { color: alertFuel === type ? colors.primary : colors.foreground }]}>
+                      {FUEL_TYPE_LABELS[type]}
+                    </Text>
+                  </Pressable>
+                ))}
+              </View>
 
-            <Text style={[styles.sheetSectionLabel, { color: colors.muted }]}>POSTO (OPCIONAL)</Text>
+              <Text style={[styles.sheetSectionLabel, { color: colors.muted }]}>PREÇO MÁXIMO</Text>
+              <View style={[styles.priceInputRow, { backgroundColor: colors.surface, borderColor: alertError ? colors.error : colors.border }]}>
+                <Text style={[styles.currencySymbol, { color: colors.muted }]}>R$</Text>
+                <TextInput
+                  style={[styles.priceInput, { color: colors.foreground }]}
+                  placeholder="0,00"
+                  placeholderTextColor={colors.muted}
+                  keyboardType="decimal-pad"
+                  value={alertPrice}
+                  onChangeText={v => { setAlertPrice(v); setAlertError(''); }}
+                  returnKeyType="done"
+                />
+                <Text style={[styles.perLiter, { color: colors.muted }]}>/litro</Text>
+              </View>
+              {alertError ? (
+                <Text style={[styles.errorText, { color: colors.error }]}>{alertError}</Text>
+              ) : null}
 
-            {/* Posto selecionado ou campo de busca */}
-            {selectedAlertStation ? (
-              // Posto já selecionado — exibe com botão de limpar
-              <Pressable
-                onPress={() => { setAlertStationId(undefined); setStationSearch(''); }}
-                style={[styles.selectedStationRow, { backgroundColor: colors.primary + '12', borderColor: colors.primary }]}
-              >
-                <View style={{ flex: 1 }}>
-                  <Text style={[styles.selectedStationName, { color: colors.foreground }]} numberOfLines={1}>
-                    {selectedAlertStation.name}
-                  </Text>
-                  <Text style={[styles.selectedStationAddr, { color: colors.muted }]} numberOfLines={1}>
-                    {selectedAlertStation.neighborhood}
-                  </Text>
-                </View>
-                <View style={[styles.clearStationBtn, { backgroundColor: colors.border }]}>
-                  <IconSymbol name="xmark" size={12} color={colors.muted} />
-                </View>
-              </Pressable>
-            ) : (
-              <>
-                {/* Opção: qualquer posto */}
+              <Text style={[styles.sheetSectionLabel, { color: colors.muted }]}>POSTO (OPCIONAL)</Text>
+
+              {/* Posto selecionado ou campo de busca */}
+              {selectedAlertStation ? (
+                // Posto já selecionado — exibe com botão de limpar
                 <Pressable
-                  onPress={() => setAlertStationId(undefined)}
-                  style={[
-                    styles.stationOption,
-                    {
-                      backgroundColor: !alertStationId ? colors.primary + '15' : colors.surface,
-                      borderColor: !alertStationId ? colors.primary : colors.border,
-                    },
-                  ]}
+                  onPress={() => { setAlertStationId(undefined); setStationSearch(''); }}
+                  style={[styles.selectedStationRow, { backgroundColor: colors.primary + '12', borderColor: colors.primary }]}
                 >
-                  <Text style={[styles.stationOptionText, { color: !alertStationId ? colors.primary : colors.foreground }]}>
-                    Qualquer posto em Manaus
-                  </Text>
-                  {!alertStationId && <IconSymbol name="checkmark" size={14} color={colors.primary} />}
+                  <View style={{ flex: 1 }}>
+                    <Text style={[styles.selectedStationName, { color: colors.foreground }]} numberOfLines={1}>
+                      {selectedAlertStation.name}
+                    </Text>
+                    <Text style={[styles.selectedStationAddr, { color: colors.muted }]} numberOfLines={1}>
+                      {selectedAlertStation.neighborhood}
+                    </Text>
+                  </View>
+                  <View style={[styles.clearStationBtn, { backgroundColor: colors.border }]}>
+                    <IconSymbol name="xmark" size={12} color={colors.muted} />
+                  </View>
                 </Pressable>
+              ) : (
+                <>
+                  {/* Opção: qualquer posto */}
+                  <Pressable
+                    onPress={() => setAlertStationId(undefined)}
+                    style={[
+                      styles.stationOption,
+                      {
+                        backgroundColor: !alertStationId ? colors.primary + '15' : colors.surface,
+                        borderColor: !alertStationId ? colors.primary : colors.border,
+                      },
+                    ]}
+                  >
+                    <Text style={[styles.stationOptionText, { color: !alertStationId ? colors.primary : colors.foreground }]}>
+                      Qualquer posto em Manaus
+                    </Text>
+                    {!alertStationId && <IconSymbol name="checkmark" size={14} color={colors.primary} />}
+                  </Pressable>
 
-                {/* Campo de busca de posto */}
-                <View style={[styles.stationSearchBox, { backgroundColor: colors.surface, borderColor: colors.border }]}>
-                  <IconSymbol name="magnifyingglass" size={15} color={colors.muted} />
-                  <TextInput
-                    style={[styles.stationSearchInput, { color: colors.foreground }]}
-                    placeholder="Buscar posto específico..."
-                    placeholderTextColor={colors.muted}
-                    value={stationSearch}
-                    onChangeText={v => { setStationSearch(v); setShowStationPicker(true); }}
-                    onFocus={() => setShowStationPicker(true)}
-                  />
-                  {stationSearch.length > 0 && (
-                    <Pressable onPress={() => { setStationSearch(''); setShowStationPicker(false); }}>
-                      <IconSymbol name="xmark.circle.fill" size={15} color={colors.muted} />
-                    </Pressable>
-                  )}
-                </View>
-
-                {/* Lista de postos filtrada */}
-                {showStationPicker && (
-                  <View style={[styles.stationPickerList, { backgroundColor: colors.background, borderColor: colors.border }]}>
-                    {stationsForAlertPicker.slice(0, 5).map(s => {
-                      const isFav = state.favoriteIds.includes(s.id);
-                      return (
-                        <Pressable
-                          key={s.id}
-                          onPress={() => {
-                            setAlertStationId(s.id);
-                            setStationSearch('');
-                            setShowStationPicker(false);
-                          }}
-                          style={({ pressed }) => [
-                            styles.stationPickerItem,
-                            {
-                              borderBottomColor: colors.border,
-                              backgroundColor: isFav ? colors.primary + '08' : 'transparent',
-                              opacity: pressed ? 0.75 : 1,
-                            },
-                          ]}
-                        >
-                          <View style={{ flex: 1 }}>
-                            <View style={styles.stationPickerNameRow}>
-                              <Text style={[styles.stationPickerName, { color: colors.foreground }]} numberOfLines={1}>
-                                {s.name}
-                              </Text>
-                              {isFav && (
-                                <Text style={[styles.stationPickerFavText, { color: colors.primary }]}>⭐</Text>
-                              )}
-                            </View>
-                            <Text style={[styles.stationPickerAddr, { color: colors.muted }]} numberOfLines={1}>
-                              {s.neighborhood} · {s.brand}
-                            </Text>
-                          </View>
-                          <IconSymbol name="chevron.right" size={13} color={colors.muted} />
-                        </Pressable>
-                      );
-                    })}
-                    {stationsForAlertPicker.length === 0 && (
-                      <Text style={[styles.stationPickerEmpty, { color: colors.muted }]}>Nenhum posto encontrado</Text>
+                  {/* Campo de busca de posto */}
+                  <View style={[styles.stationSearchBox, { backgroundColor: colors.surface, borderColor: colors.border }]}>
+                    <IconSymbol name="magnifyingglass" size={15} color={colors.muted} />
+                    <TextInput
+                      style={[styles.stationSearchInput, { color: colors.foreground }]}
+                      placeholder="Buscar posto específico..."
+                      placeholderTextColor={colors.muted}
+                      value={stationSearch}
+                      onChangeText={v => { setStationSearch(v); setShowStationPicker(true); }}
+                      onFocus={() => setShowStationPicker(true)}
+                    />
+                    {stationSearch.length > 0 && (
+                      <Pressable onPress={() => { setStationSearch(''); setShowStationPicker(false); }}>
+                        <IconSymbol name="xmark.circle.fill" size={15} color={colors.muted} />
+                      </Pressable>
                     )}
                   </View>
-                )}
-              </>
-            )}
 
-            <Pressable
-              onPress={handleCreateAlert}
-              style={({ pressed }) => [
-                styles.createBtn,
-                { backgroundColor: colors.primary, opacity: pressed ? 0.85 : 1 },
-              ]}
-            >
-              <IconSymbol name="bell.fill" size={16} color="#fff" />
-              <Text style={styles.createBtnText}>Criar Alerta</Text>
-            </Pressable>
+                  {/* Lista de postos filtrada */}
+                  {showStationPicker && (
+                    <View style={[styles.stationPickerList, { backgroundColor: colors.background, borderColor: colors.border }]}>
+                      {stationsForAlertPicker.slice(0, 5).map(s => {
+                        const isFav = state.favoriteIds.includes(s.id);
+                        return (
+                          <Pressable
+                            key={s.id}
+                            onPress={() => {
+                              setAlertStationId(s.id);
+                              setStationSearch('');
+                              setShowStationPicker(false);
+                            }}
+                            style={({ pressed }) => [
+                              styles.stationPickerItem,
+                              {
+                                borderBottomColor: colors.border,
+                                backgroundColor: isFav ? colors.primary + '08' : 'transparent',
+                                opacity: pressed ? 0.75 : 1,
+                              },
+                            ]}
+                          >
+                            <View style={{ flex: 1 }}>
+                              <View style={styles.stationPickerNameRow}>
+                                <Text style={[styles.stationPickerName, { color: colors.foreground }]} numberOfLines={1}>
+                                  {s.name}
+                                </Text>
+                                {isFav && (
+                                  <Text style={[styles.stationPickerFavText, { color: colors.primary }]}>⭐</Text>
+                                )}
+                              </View>
+                              <Text style={[styles.stationPickerAddr, { color: colors.muted }]} numberOfLines={1}>
+                                {s.neighborhood} · {s.brand}
+                              </Text>
+                            </View>
+                            <IconSymbol name="chevron.right" size={13} color={colors.muted} />
+                          </Pressable>
+                        );
+                      })}
+                      {stationsForAlertPicker.length === 0 && (
+                        <Text style={[styles.stationPickerEmpty, { color: colors.muted }]}>Nenhum posto encontrado</Text>
+                      )}
+                    </View>
+                  )}
+                </>
+              )}
+
+              <Pressable
+                onPress={handleCreateAlert}
+                style={({ pressed }) => [
+                  styles.createBtn,
+                  { backgroundColor: colors.primary, opacity: pressed ? 0.85 : 1, marginTop: 10 },
+                ]}
+              >
+                <IconSymbol name="bell.fill" size={16} color="#fff" />
+                <Text style={styles.createBtnText}>Criar Alerta</Text>
+              </Pressable>
+            </ScrollView>
           </View>
-        </View>
+        </KeyboardAvoidingView>
       </Modal>
     </ScreenContainer>
   );
@@ -679,7 +686,7 @@ const styles = StyleSheet.create({
     borderRightWidth: 1,
     padding: 20,
     paddingBottom: 40,
-    gap: 10,
+    maxHeight: '90%',
   },
   sheetHandle: {
     width: 36,
