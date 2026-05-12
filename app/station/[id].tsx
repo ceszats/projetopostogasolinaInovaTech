@@ -28,6 +28,10 @@ import {
   calculateDistance,
   MANAUS_CENTER,
 } from '@/data/stations';
+import { trpc } from '@/lib/trpc';
+import { usePriceEngine } from '@/hooks/use-price-engine';
+import { useNearbyGeofence } from '@/hooks/use-nearby-geofence';
+import { PriceConfirmBanner } from '@/components/PriceConfirmBanner';
 import * as Haptics from 'expo-haptics';
 
 const { width: SCREEN_WIDTH } = Dimensions.get('window');
@@ -120,6 +124,24 @@ export default function StationDetailScreen() {
     };
   }, [id, state.stations, state.favoriteIds, state.userLocation]);
 
+  // Busca contribuições reais do servidor
+  const { data: dbContributions } = trpc.stations.prices.useQuery(
+    { stationId: id as string },
+    { enabled: !!id }
+  );
+
+  // Hook de geofencing para saber se o usuário está no posto
+  const nearbyStation = useNearbyGeofence();
+  const isAtThisStation = nearbyStation?.id === id;
+
+  // Motor de preços para o combustível selecionado
+  const currentFuelPrices = useMemo(() => {
+    if (!dbContributions) return [];
+    return dbContributions.filter(c => c.fuelType === selectedFuel);
+  }, [dbContributions, selectedFuel]);
+
+  const priceStats = usePriceEngine(currentFuelPrices, selectedFuel);
+
   if (!station) {
     return (
       <View style={[styles.notFound, { backgroundColor: colors.background }]}>
@@ -198,6 +220,24 @@ export default function StationDetailScreen() {
       </View>
 
       <ScrollView contentContainerStyle={[styles.content, { paddingBottom: insets.bottom + 24 }]}>
+        {/* Banner de Confirmação Inteligente (Geofencing) */}
+        {isAtThisStation && priceStats.medianPrice && (
+          <PriceConfirmBanner
+            stationName={station.name}
+            fuelType={selectedFuel}
+            price={priceStats.medianPrice}
+            onConfirm={() => {
+              dispatch({
+                type: 'REPORT_PRICE',
+                stationId: station.id,
+                fuelType: selectedFuel,
+                price: priceStats.medianPrice!,
+              });
+            }}
+            onIncorrect={handleReport}
+          />
+        )}
+
         {/* Info card */}
         <View style={[styles.infoCard, { backgroundColor: colors.surface, borderColor: colors.border }]}>
           <View style={styles.infoRow}>

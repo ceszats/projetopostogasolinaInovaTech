@@ -89,7 +89,29 @@ export const appRouter = router({
       .query(async ({ input }) => {
         return db.getStationContributions(input.stationId);
       }),
-  })
+  }),
+
+  stations: router({
+    prices: publicProcedure
+      .input(z.object({ stationId: z.string() }))
+      .query(async ({ input }) => {
+        const contributions = await db.getStationContributions(input.stationId);
+        // Retorna as contribuições brutas para o frontend processar com usePriceEngine
+        // ou podemos processar aqui no futuro.
+        return contributions.map(c => ({
+          price: parseFloat(c.price),
+          createdAt: new Date(c.createdAt),
+          fuelType: c.fuelType,
+        }));
+      }),
+  }),
+
+  user: router({
+    reputation: protectedProcedure.query(async ({ ctx }) => {
+      const rep = await db.getUserReputation(ctx.user.id);
+      return rep;
+    }),
+  }),
 });
 
 export type AppRouter = typeof appRouter;

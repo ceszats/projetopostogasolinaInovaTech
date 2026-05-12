@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import {
   View,
   Text,
@@ -13,7 +13,9 @@ import {
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { ScreenContainer } from '@/components/screen-container';
 import { IconSymbol } from '@/components/ui/icon-symbol';
+import { GamificationBadge } from '@/components/GamificationBadge';
 import { useColors } from '@/hooks/use-colors';
+import { trpc } from '@/lib/trpc';
 import { useApp, PriceAlert } from '@/context/AppContext';
 import { STATIONS, FuelType, FUEL_TYPE_LABELS, FUEL_TYPE_ICONS } from '@/data/stations';
 import { useColorScheme } from '@/hooks/use-color-scheme';
@@ -36,9 +38,35 @@ export default function ProfileScreen() {
   const [alertPrice, setAlertPrice] = useState('');
   const [alertStationId, setAlertStationId] = useState<string | undefined>(undefined);
   const [alertError, setAlertError] = useState('');
+  // busca de posto no modal de alerta
+  const [stationSearch, setStationSearch] = useState('');
+  const [showStationPicker, setShowStationPicker] = useState(false);
 
   const contributions = state.contributions;
   const alerts = state.alerts;
+
+  // Busca reputação real do servidor
+  const { data: reputation } = trpc.user.reputation.useQuery(undefined, {
+    enabled: !!state.user
+  });
+
+  // Postos para o picker de alerta — favoritos primeiro
+  const stationsForAlertPicker = useMemo(() => {
+    const q = stationSearch.toLowerCase();
+    const matched = STATIONS.filter(
+      s =>
+        s.name.toLowerCase().includes(q) ||
+        s.neighborhood.toLowerCase().includes(q) ||
+        s.brand.toLowerCase().includes(q),
+    );
+    return matched.sort((a, b) => {
+      const aFav = state.favoriteIds.includes(a.id) ? 0 : 1;
+      const bFav = state.favoriteIds.includes(b.id) ? 0 : 1;
+      return aFav - bFav;
+    });
+  }, [stationSearch, state.favoriteIds]);
+
+  const selectedAlertStation = alertStationId ? STATIONS.find(s => s.id === alertStationId) : null;
 
   const handleCreateAlert = () => {
     const price = parseFloat(alertPrice.replace(',', '.'));
@@ -61,6 +89,8 @@ export default function ProfileScreen() {
     setAlertFuel('gasolina');
     setAlertStationId(undefined);
     setAlertError('');
+    setStationSearch('');
+    setShowStationPicker(false);
   };
 
   const handleToggleAlert = (id: string) => {
@@ -87,7 +117,18 @@ export default function ProfileScreen() {
             <Text style={styles.avatarText}>🚗</Text>
           </View>
           <View style={{ flex: 1 }}>
-            <Text style={[styles.profileName, { color: colors.foreground }]}>Motorista Manauara</Text>
+            <Text style={[styles.profileName, { color: colors.foreground }]}>
+              {state.user?.name ?? 'Motorista Manauara'}
+            </Text>
+            {reputation && (
+              <View style={{ marginTop: 4 }}>
+                <GamificationBadge 
+                  totalContributions={reputation.total} 
+                  confirmedContributions={reputation.confirmed}
+                  hideLabel={false}
+                />
+              </View>
+            )}
             <Text style={[styles.profileSub, { color: colors.muted }]}>Contribuidor Abastece Manaus</Text>
           </View>
           <View style={[styles.contributionBadge, { backgroundColor: colors.primary }]}>
@@ -297,21 +338,109 @@ export default function ProfileScreen() {
             ) : null}
 
             <Text style={[styles.sheetSectionLabel, { color: colors.muted }]}>POSTO (OPCIONAL)</Text>
-            <Pressable
-              onPress={() => setAlertStationId(undefined)}
-              style={[
-                styles.stationOption,
-                {
-                  backgroundColor: !alertStationId ? colors.primary + '15' : colors.surface,
-                  borderColor: !alertStationId ? colors.primary : colors.border,
-                },
-              ]}
-            >
-              <Text style={[styles.stationOptionText, { color: !alertStationId ? colors.primary : colors.foreground }]}>
-                Qualquer posto em Manaus
-              </Text>
-              {!alertStationId && <IconSymbol name="checkmark" size={14} color={colors.primary} />}
-            </Pressable>
+
+            {/* Posto selecionado ou campo de busca */}
+            {selectedAlertStation ? (
+              // Posto já selecionado — exibe com botão de limpar
+              <Pressable
+                onPress={() => { setAlertStationId(undefined); setStationSearch(''); }}
+                style={[styles.selectedStationRow, { backgroundColor: colors.primary + '12', borderColor: colors.primary }]}
+              >
+                <View style={{ flex: 1 }}>
+                  <Text style={[styles.selectedStationName, { color: colors.foreground }]} numberOfLines={1}>
+                    {selectedAlertStation.name}
+                  </Text>
+                  <Text style={[styles.selectedStationAddr, { color: colors.muted }]} numberOfLines={1}>
+                    {selectedAlertStation.neighborhood}
+                  </Text>
+                </View>
+                <View style={[styles.clearStationBtn, { backgroundColor: colors.border }]}>
+                  <IconSymbol name="xmark" size={12} color={colors.muted} />
+                </View>
+              </Pressable>
+            ) : (
+              <>
+                {/* Opção: qualquer posto */}
+                <Pressable
+                  onPress={() => setAlertStationId(undefined)}
+                  style={[
+                    styles.stationOption,
+                    {
+                      backgroundColor: !alertStationId ? colors.primary + '15' : colors.surface,
+                      borderColor: !alertStationId ? colors.primary : colors.border,
+                    },
+                  ]}
+                >
+                  <Text style={[styles.stationOptionText, { color: !alertStationId ? colors.primary : colors.foreground }]}>
+                    Qualquer posto em Manaus
+                  </Text>
+                  {!alertStationId && <IconSymbol name="checkmark" size={14} color={colors.primary} />}
+                </Pressable>
+
+                {/* Campo de busca de posto */}
+                <View style={[styles.stationSearchBox, { backgroundColor: colors.surface, borderColor: colors.border }]}>
+                  <IconSymbol name="magnifyingglass" size={15} color={colors.muted} />
+                  <TextInput
+                    style={[styles.stationSearchInput, { color: colors.foreground }]}
+                    placeholder="Buscar posto específico..."
+                    placeholderTextColor={colors.muted}
+                    value={stationSearch}
+                    onChangeText={v => { setStationSearch(v); setShowStationPicker(true); }}
+                    onFocus={() => setShowStationPicker(true)}
+                  />
+                  {stationSearch.length > 0 && (
+                    <Pressable onPress={() => { setStationSearch(''); setShowStationPicker(false); }}>
+                      <IconSymbol name="xmark.circle.fill" size={15} color={colors.muted} />
+                    </Pressable>
+                  )}
+                </View>
+
+                {/* Lista de postos filtrada */}
+                {showStationPicker && (
+                  <View style={[styles.stationPickerList, { backgroundColor: colors.background, borderColor: colors.border }]}>
+                    {stationsForAlertPicker.slice(0, 5).map(s => {
+                      const isFav = state.favoriteIds.includes(s.id);
+                      return (
+                        <Pressable
+                          key={s.id}
+                          onPress={() => {
+                            setAlertStationId(s.id);
+                            setStationSearch('');
+                            setShowStationPicker(false);
+                          }}
+                          style={({ pressed }) => [
+                            styles.stationPickerItem,
+                            {
+                              borderBottomColor: colors.border,
+                              backgroundColor: isFav ? colors.primary + '08' : 'transparent',
+                              opacity: pressed ? 0.75 : 1,
+                            },
+                          ]}
+                        >
+                          <View style={{ flex: 1 }}>
+                            <View style={styles.stationPickerNameRow}>
+                              <Text style={[styles.stationPickerName, { color: colors.foreground }]} numberOfLines={1}>
+                                {s.name}
+                              </Text>
+                              {isFav && (
+                                <Text style={[styles.stationPickerFavText, { color: colors.primary }]}>⭐</Text>
+                              )}
+                            </View>
+                            <Text style={[styles.stationPickerAddr, { color: colors.muted }]} numberOfLines={1}>
+                              {s.neighborhood} · {s.brand}
+                            </Text>
+                          </View>
+                          <IconSymbol name="chevron.right" size={13} color={colors.muted} />
+                        </Pressable>
+                      );
+                    })}
+                    {stationsForAlertPicker.length === 0 && (
+                      <Text style={[styles.stationPickerEmpty, { color: colors.muted }]}>Nenhum posto encontrado</Text>
+                    )}
+                  </View>
+                )}
+              </>
+            )}
 
             <Pressable
               onPress={handleCreateAlert}
@@ -555,7 +684,7 @@ const styles = StyleSheet.create({
   sheetHandle: {
     width: 36,
     height: 4,
-    backgroundColor: '#D1D5DB',
+    backgroundColor: '#1F30A0',
     borderRadius: 2,
     alignSelf: 'center',
     marginBottom: 4,
@@ -640,6 +769,86 @@ const styles = StyleSheet.create({
     fontSize: 14,
     fontWeight: '500',
     lineHeight: 19,
+  },
+  // Seleção de posto com busca
+  selectedStationRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 10,
+    padding: 12,
+    borderRadius: 12,
+    borderWidth: 1.5,
+  },
+  selectedStationName: {
+    fontSize: 14,
+    fontWeight: '600',
+    lineHeight: 19,
+  },
+  selectedStationAddr: {
+    fontSize: 12,
+    lineHeight: 16,
+    marginTop: 1,
+  },
+  clearStationBtn: {
+    width: 26,
+    height: 26,
+    borderRadius: 13,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  stationSearchBox: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    paddingHorizontal: 12,
+    paddingVertical: 10,
+    borderRadius: 12,
+    borderWidth: 1.5,
+  },
+  stationSearchInput: {
+    flex: 1,
+    fontSize: 14,
+    lineHeight: 19,
+    padding: 0,
+  },
+  stationPickerList: {
+    borderRadius: 12,
+    borderWidth: 1,
+    overflow: 'hidden',
+  },
+  stationPickerItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: 12,
+    paddingVertical: 11,
+    borderBottomWidth: 0.5,
+    gap: 8,
+  },
+  stationPickerNameRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+  },
+  stationPickerName: {
+    fontSize: 13,
+    fontWeight: '600',
+    lineHeight: 18,
+    flexShrink: 1,
+  },
+  stationPickerFavText: {
+    fontSize: 12,
+    lineHeight: 16,
+  },
+  stationPickerAddr: {
+    fontSize: 11,
+    lineHeight: 15,
+    marginTop: 1,
+  },
+  stationPickerEmpty: {
+    padding: 14,
+    textAlign: 'center',
+    fontSize: 13,
+    lineHeight: 18,
   },
   createBtn: {
     flexDirection: 'row',

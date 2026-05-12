@@ -179,24 +179,24 @@ export function StationCard({ station, fuelType = 'gasolina', showDistance = tru
 
 const styles = StyleSheet.create({
   card: {
-    borderRadius: 14,
+    borderRadius: 16,
     borderWidth: 1,
     marginHorizontal: 16,
     marginVertical: 5,
     overflow: 'hidden',
     flexDirection: 'row',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.06,
-    shadowRadius: 4,
-    elevation: 2,
+    shadowColor: '#C21A2C',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.08,
+    shadowRadius: 6,
+    elevation: 3,
   },
   compact: {
     marginHorizontal: 0,
     marginVertical: 3,
   },
   brandStrip: {
-    width: 4,
+    width: 6,
   },
   content: {
     flex: 1,

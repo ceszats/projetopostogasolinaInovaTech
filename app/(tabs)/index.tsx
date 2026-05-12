@@ -4,6 +4,7 @@ import {
   Text,
   Pressable,
   StyleSheet,
+  TouchableWithoutFeedback,
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { ScreenContainer } from '@/components/screen-container';
@@ -88,10 +89,12 @@ export default function MapScreen() {
       />
 
       {/* Header overlay */}
-      <View style={[styles.headerOverlay, { backgroundColor: colors.background + 'F5', paddingTop: insets.top + 4 }]}>
+      <View style={[styles.headerOverlay, { backgroundColor: colors.background + 'F8', paddingTop: insets.top + 4, borderBottomColor: colors.border, borderBottomWidth: 0.5 }]}>
         <View style={styles.headerTitle}>
           <Text style={[styles.appName, { color: colors.primary }]}>⛽ Abastece</Text>
-          <Text style={[styles.appCity, { color: colors.foreground }]}>Manaus</Text>
+          <View style={[styles.cityBadge, { backgroundColor: colors.primary + '18' }]}>
+            <Text style={[styles.appCity, { color: colors.primary }]}>Manaus</Text>
+          </View>
         </View>
         <FuelTypeFilter selected={fuelType} onSelect={handleFuelSelect} />
       </View>
@@ -119,52 +122,76 @@ export default function MapScreen() {
         <IconSymbol name="location.fill" size={22} color={colors.primary} />
       </Pressable>
 
-      {/* Bottom sheet for selected station */}
+      {/* Bottom sheet for selected station — TouchableWithoutFeedback impede
+           que toques internos "vazem" para o mapa abaixo e quebrem o X */}
       {selectedStation && (
-        <View style={[styles.bottomSheet, { backgroundColor: colors.background, borderColor: colors.border, paddingBottom: insets.bottom + 12 }]}>
-          <View style={styles.bottomSheetHandle} />
-          <View style={styles.bottomSheetContent}>
-            <View style={{ flex: 1 }}>
-              <Text style={[styles.bsName, { color: colors.foreground }]} numberOfLines={1}>
-                {selectedStation.name}
-              </Text>
-              <Text style={[styles.bsAddr, { color: colors.muted }]} numberOfLines={1}>
-                {selectedStation.neighborhood} · {selectedStation.address}
-              </Text>
-              {(() => {
-                const price = selectedStation.prices.find(p => p.type === fuelType);
-                if (!price) return null;
-                const cat = getPriceCategory(price.price);
-                const pc = getPriceCategoryColor(cat);
-                return (
-                  <View style={styles.bsPriceRow}>
-                    <View style={[styles.bsPriceBadge, { backgroundColor: pc + '20' }]}>
-                      <Text style={[styles.bsPrice, { color: pc }]}>R$ {price.price.toFixed(2)}</Text>
-                    </View>
-                    <Text style={[styles.bsTime, { color: colors.muted }]}>
-                      {formatTimeAgo(price.updatedAt)} · {price.confirmations} confirmações
-                    </Text>
-                  </View>
-                );
-              })()}
-            </View>
-            <View style={styles.bsActions}>
+        <TouchableWithoutFeedback>
+          <View
+            style={[
+              styles.bottomSheet,
+              {
+                backgroundColor: colors.card ?? colors.background,
+                borderColor: colors.border,
+                paddingBottom: insets.bottom + 12,
+              },
+            ]}
+          >
+            {/* Handle + botão fechar no topo */}
+            <View style={styles.bsTopRow}>
+              <View style={[styles.bottomSheetHandle, { backgroundColor: colors.border }]} />
               <Pressable
+                hitSlop={12}
                 onPress={() => setSelectedStation(null)}
-                style={({ pressed }) => [styles.bsBtnSecondary, { borderColor: colors.border, opacity: pressed ? 0.7 : 1 }]}
+                style={({ pressed }) => [
+                  styles.bsCloseBtn,
+                  { backgroundColor: colors.surface, borderColor: colors.border, opacity: pressed ? 0.6 : 1 },
+                ]}
               >
-                <IconSymbol name="xmark" size={16} color={colors.muted} />
+                <IconSymbol name="xmark" size={15} color={colors.foreground} />
               </Pressable>
+            </View>
+
+            <View style={styles.bottomSheetContent}>
+              <View style={{ flex: 1 }}>
+                {/* Nome + endereço */}
+                <Text style={[styles.bsName, { color: colors.foreground }]} numberOfLines={1}>
+                  {selectedStation.name}
+                </Text>
+                <Text style={[styles.bsAddr, { color: colors.muted }]} numberOfLines={1}>
+                  {selectedStation.neighborhood} · {selectedStation.address}
+                </Text>
+                {(() => {
+                  const price = selectedStation.prices.find(p => p.type === fuelType);
+                  if (!price) return null;
+                  const cat = getPriceCategory(price.price);
+                  const pc = getPriceCategoryColor(cat);
+                  return (
+                    <View style={styles.bsPriceRow}>
+                      <View style={[styles.bsPriceBadge, { backgroundColor: pc + '20' }]}>
+                        <Text style={[styles.bsPrice, { color: pc }]}>R$ {price.price.toFixed(2)}</Text>
+                      </View>
+                      <Text style={[styles.bsTime, { color: colors.muted }]}>
+                        {formatTimeAgo(price.updatedAt)} · {price.confirmations} confirmações
+                      </Text>
+                    </View>
+                  );
+                })()}
+              </View>
+
+              {/* Botão principal */}
               <Pressable
                 onPress={() => handleViewDetail(selectedStation)}
-                style={({ pressed }) => [styles.bsBtnPrimary, { backgroundColor: colors.primary, opacity: pressed ? 0.85 : 1 }]}
+                style={({ pressed }) => [
+                  styles.bsBtnPrimary,
+                  { backgroundColor: colors.primary, opacity: pressed ? 0.85 : 1 },
+                ]}
               >
                 <Text style={styles.bsBtnText}>Ver detalhes</Text>
                 <IconSymbol name="chevron.right" size={16} color="#fff" />
               </Pressable>
             </View>
           </View>
-        </View>
+        </TouchableWithoutFeedback>
       )}
     </View>
   );
@@ -189,19 +216,25 @@ const styles = StyleSheet.create({
   headerTitle: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 6,
+    gap: 8,
     paddingHorizontal: 16,
-    paddingBottom: 4,
+    paddingBottom: 6,
+  },
+  cityBadge: {
+    paddingHorizontal: 8,
+    paddingVertical: 2,
+    borderRadius: 10,
   },
   appName: {
-    fontSize: 18,
-    fontWeight: '800',
-    lineHeight: 24,
+    fontSize: 19,
+    fontWeight: '900',
+    lineHeight: 25,
+    letterSpacing: -0.3,
   },
   appCity: {
-    fontSize: 18,
-    fontWeight: '400',
-    lineHeight: 24,
+    fontSize: 13,
+    fontWeight: '700',
+    lineHeight: 18,
   },
   // Map pins
   pin: {
@@ -315,20 +348,38 @@ const styles = StyleSheet.create({
     shadowRadius: 8,
     elevation: 8,
   },
+  bsTopRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingTop: 10,
+    paddingHorizontal: 16,
+    marginBottom: 2,
+    position: 'relative',
+  },
   bottomSheetHandle: {
     width: 36,
     height: 4,
-    backgroundColor: '#D1D5DB',
     borderRadius: 2,
     alignSelf: 'center',
-    marginTop: 10,
-    marginBottom: 4,
+    flex: 1,
+  },
+  bsCloseBtn: {
+    position: 'absolute',
+    right: 16,
+    width: 32,
+    height: 32,
+    borderRadius: 16,
+    borderWidth: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   bottomSheetContent: {
     flexDirection: 'row',
     alignItems: 'center',
     paddingHorizontal: 16,
-    paddingTop: 8,
+    paddingTop: 6,
+    paddingBottom: 2,
     gap: 12,
   },
   bsName: {
@@ -366,27 +417,24 @@ const styles = StyleSheet.create({
     gap: 8,
     alignItems: 'center',
   },
-  bsBtnSecondary: {
-    width: 36,
-    height: 36,
-    borderRadius: 18,
-    borderWidth: 1,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
   bsBtnPrimary: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 4,
-    paddingHorizontal: 14,
-    paddingVertical: 9,
-    borderRadius: 18,
+    paddingHorizontal: 16,
+    paddingVertical: 10,
+    borderRadius: 20,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.15,
+    shadowRadius: 4,
+    elevation: 3,
   },
   bsBtnText: {
     color: '#fff',
-    fontSize: 13,
-    fontWeight: '600',
-    lineHeight: 18,
+    fontSize: 14,
+    fontWeight: '700',
+    lineHeight: 19,
   },
   // Web fallback
   sectionTitle: {

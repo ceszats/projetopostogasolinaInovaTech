@@ -451,7 +451,7 @@ const styles = StyleSheet.create({
   sheetHandle: {
     width: 36,
     height: 4,
-    backgroundColor: '#D1D5DB',
+    backgroundColor: '#1F30A0',
     borderRadius: 2,
     alignSelf: 'center',
     marginBottom: 8,

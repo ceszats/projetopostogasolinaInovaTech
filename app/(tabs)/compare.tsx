@@ -59,12 +59,18 @@ export default function CompareScreen() {
 
   const filteredStations = useMemo(() => {
     const q = searchQuery.toLowerCase();
-    return stationsWithDistance.filter(s =>
+    const matched = stationsWithDistance.filter(s =>
       s.name.toLowerCase().includes(q) ||
       s.neighborhood.toLowerCase().includes(q) ||
       s.brand.toLowerCase().includes(q)
     );
-  }, [stationsWithDistance, searchQuery]);
+    // Favoritos sempre primeiro
+    return matched.sort((a, b) => {
+      const aFav = state.favoriteIds.includes(a.id) ? 0 : 1;
+      const bFav = state.favoriteIds.includes(b.id) ? 0 : 1;
+      return aFav - bFav;
+    });
+  }, [stationsWithDistance, searchQuery, state.favoriteIds]);
 
   const handleSelectStation = (station: Station) => {
     if (Platform.OS !== 'web') Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
@@ -374,23 +380,41 @@ export default function CompareScreen() {
             <FlatList
               data={filteredStations}
               keyExtractor={s => s.id}
-              renderItem={({ item }) => (
-                <Pressable
-                  onPress={() => handleSelectStation(item)}
-                  style={({ pressed }) => [
-                    styles.pickerItem,
-                    { borderBottomColor: colors.border, opacity: pressed ? 0.8 : 1 },
-                  ]}
-                >
-                  <View style={{ flex: 1 }}>
-                    <Text style={[styles.pickerItemName, { color: colors.foreground }]}>{item.name}</Text>
-                    <Text style={[styles.pickerItemAddr, { color: colors.muted }]}>
-                      {item.neighborhood} · {item.distance?.toFixed(1)}km
-                    </Text>
-                  </View>
-                  <IconSymbol name="chevron.right" size={14} color={colors.muted} />
-                </Pressable>
-              )}
+              renderItem={({ item }) => {
+                const isFav = state.favoriteIds.includes(item.id);
+                const isAlreadySelected =
+                  (showPicker === 0 && item.id === comparatorIds[1]) ||
+                  (showPicker === 1 && item.id === comparatorIds[0]);
+                return (
+                  <Pressable
+                    onPress={() => !isAlreadySelected && handleSelectStation(item)}
+                    style={({ pressed }) => [
+                      styles.pickerItem,
+                      {
+                        borderBottomColor: colors.border,
+                        opacity: isAlreadySelected ? 0.4 : pressed ? 0.8 : 1,
+                        backgroundColor: isFav ? colors.primary + '08' : 'transparent',
+                      },
+                    ]}
+                  >
+                    <View style={{ flex: 1 }}>
+                      <View style={styles.pickerItemNameRow}>
+                        <Text style={[styles.pickerItemName, { color: colors.foreground }]}>{item.name}</Text>
+                        {isFav && (
+                          <View style={[styles.favBadge, { backgroundColor: colors.primary + '20' }]}>
+                            <Text style={[styles.favBadgeText, { color: colors.primary }]}>⭐ Favorito</Text>
+                          </View>
+                        )}
+                      </View>
+                      <Text style={[styles.pickerItemAddr, { color: colors.muted }]}>
+                        {item.neighborhood} · {item.distance?.toFixed(1)}km
+                        {isAlreadySelected ? ' · já selecionado' : ''}
+                      </Text>
+                    </View>
+                    <IconSymbol name="chevron.right" size={14} color={colors.muted} />
+                  </Pressable>
+                );
+              }}
             />
           </View>
         </View>
@@ -664,10 +688,26 @@ const styles = StyleSheet.create({
     borderBottomWidth: 0.5,
     gap: 12,
   },
+  pickerItemNameRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    flexWrap: 'wrap',
+  },
   pickerItemName: {
     fontSize: 14,
     fontWeight: '600',
     lineHeight: 19,
+  },
+  favBadge: {
+    paddingHorizontal: 6,
+    paddingVertical: 2,
+    borderRadius: 8,
+  },
+  favBadgeText: {
+    fontSize: 10,
+    fontWeight: '700',
+    lineHeight: 14,
   },
   pickerItemAddr: {
     fontSize: 12,

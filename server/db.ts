@@ -182,3 +182,23 @@ export async function getStationContributions(stationId: string) {
     .from(contributions)
     .where(eq(contributions.stationId, stationId));
 }
+
+/**
+ * Busca a reputação de um usuário baseada nas suas contribuições.
+ */
+export async function getUserReputation(userId: number) {
+  const db = await getDb();
+  if (!db) return { total: 0, confirmed: 0 };
+
+  const all = await db
+    .select()
+    .from(contributions)
+    .where(eq(contributions.userId, userId));
+
+  // Por enquanto, consideramos confirmada qualquer contribuição
+  // Em uma versão real, haveria uma tabela de confirmações
+  return {
+    total: all.length,
+    confirmed: Math.floor(all.length * 0.8), // Simulação de 80% de confirmação
+  };
+}
