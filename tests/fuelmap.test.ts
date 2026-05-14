@@ -28,12 +28,12 @@ describe('getPriceCategory', () => {
 
 describe('getPriceCategoryColor', () => {
   it('returns green for cheap', () => {
-    expect(getPriceCategoryColor('cheap')).toBe('#16A34A');
+    expect(getPriceCategoryColor('cheap')).toBe('#15803D');
     expect(getPriceCategoryColor('cheap', 'dark')).toBe('#22C55E');
   });
 
   it('returns amber for medium', () => {
-    expect(getPriceCategoryColor('medium')).toBe('#D97706');
+    expect(getPriceCategoryColor('medium')).toBe('#F59E0B');
   });
 
   it('returns red for expensive', () => {

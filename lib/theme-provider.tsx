@@ -50,6 +50,13 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
         "color-success": SchemeColors[colorScheme].success,
         "color-warning": SchemeColors[colorScheme].warning,
         "color-error": SchemeColors[colorScheme].error,
+        "color-priceCheap": SchemeColors[colorScheme].priceCheap,
+        "color-priceMedium": SchemeColors[colorScheme].priceMedium,
+        "color-priceExpensive": SchemeColors[colorScheme].priceExpensive,
+        "color-fuelGasoline": SchemeColors[colorScheme].fuelGasoline,
+        "color-fuelEthanol": SchemeColors[colorScheme].fuelEthanol,
+        "color-fuelDiesel": SchemeColors[colorScheme].fuelDiesel,
+        "color-fuelGnv": SchemeColors[colorScheme].fuelGnv,
       }),
     [colorScheme],
   );
@@ -61,7 +68,6 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
     }),
     [colorScheme, setColorScheme],
   );
-  console.log(value, themeVariables)
 
   return (
     <ThemeContext.Provider value={value}>

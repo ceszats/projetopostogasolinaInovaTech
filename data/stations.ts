@@ -2109,8 +2109,8 @@ export function getPriceCategory(price: number): 'cheap' | 'medium' | 'expensive
 
 export function getPriceCategoryColor(category: 'cheap' | 'medium' | 'expensive', scheme: 'light' | 'dark' = 'light'): string {
   const colors = {
-    cheap: scheme === 'light' ? '#16A34A' : '#22C55E',
-    medium: scheme === 'light' ? '#D97706' : '#FBBF24',
+    cheap: scheme === 'light' ? '#15803D' : '#22C55E',
+    medium: scheme === 'light' ? '#F59E0B' : '#FBBF24',
     expensive: scheme === 'light' ? '#DC2626' : '#F87171',
   };
   return colors[category];
