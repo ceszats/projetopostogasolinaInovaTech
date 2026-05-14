@@ -8,10 +8,10 @@ import {
   Platform,
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { ScreenContainer } from '@/components/screen-container';
-import { StationCard } from '@/components/StationCard';
+import { ScreenContainer } from '@/components/layout/screen-container';
+import { StationCard } from '@/components/fuel/StationCard';
 import { IconSymbol } from '@/components/ui/icon-symbol';
-import { useTheme } from '@/hooks/use-theme';
+import { useTheme } from '@/hooks/theme/use-theme';
 import { useApp } from '@/context/AppContext';
 import {
   STATIONS,

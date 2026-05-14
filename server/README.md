@@ -62,7 +62,7 @@ The template uses **Manus OAuth** for user authentication. It works differently 
 ### Using the Auth Hook
 
 ```tsx
-import { useAuth } from "@/hooks/use-auth";
+import { useAuth } from "@/hooks/auth/use-auth";
 
 function MyScreen() {
   const { user, isAuthenticated, loading, logout } = useAuth();

@@ -1,6 +1,6 @@
 import React from 'react';
 import { View, Text, Pressable, ScrollView, StyleSheet } from 'react-native';
-import { useColors } from '@/hooks/use-colors';
+import { useColors } from '@/hooks/theme/use-colors';
 import { FuelType, FUEL_TYPE_LABELS, FUEL_TYPE_ICONS } from '@/data/stations';
 import * as Haptics from 'expo-haptics';
 import { Platform } from 'react-native';

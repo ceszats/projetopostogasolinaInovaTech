@@ -1,7 +1,7 @@
 import React from 'react';
 import { View, Text, StyleSheet } from 'react-native';
-import { useColors } from '@/hooks/use-colors';
-import { calcReputation } from '@/hooks/use-price-engine';
+import { useColors } from '@/hooks/theme/use-colors';
+import { calcReputation } from '@/hooks/fuel/use-price-engine';
 
 interface GamificationBadgeProps {
   totalContributions: number;

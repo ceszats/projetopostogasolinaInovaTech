@@ -12,14 +12,14 @@ import {
   KeyboardAvoidingView,
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { ScreenContainer } from '@/components/screen-container';
+import { ScreenContainer } from '@/components/layout/screen-container';
 import { IconSymbol } from '@/components/ui/icon-symbol';
-import { GamificationBadge } from '@/components/GamificationBadge';
-import { useTheme } from '@/hooks/use-theme';
+import { GamificationBadge } from '@/components/gamification/GamificationBadge';
+import { useTheme } from '@/hooks/theme/use-theme';
 import { trpc } from '@/lib/trpc';
 import { useApp, PriceAlert } from '@/context/AppContext';
 import { STATIONS, FuelType, FUEL_TYPE_LABELS, FUEL_TYPE_ICONS } from '@/data/stations';
-import { useColorScheme } from '@/hooks/use-color-scheme';
+import { useColorScheme } from '@/hooks/theme/use-color-scheme';
 import { useThemeContext } from '@/lib/theme-provider';
 
 import * as Haptics from 'expo-haptics';

@@ -2,9 +2,9 @@ import React, { useCallback, useEffect, useState } from 'react';
 import { Platform, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import * as Location from 'expo-location';
 
-import { ScreenContainer } from '@/components/screen-container';
+import { ScreenContainer } from '@/components/layout/screen-container';
 import { useApp } from '@/context/AppContext';
-import { useColors } from '@/hooks/use-colors';
+import { useColors } from '@/hooks/theme/use-colors';
 
 type PermissionStatus = Location.PermissionStatus | 'unknown';
 

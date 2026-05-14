@@ -1,5 +1,7 @@
 # 🗺️ FuelMap Manaus
 
+Para entender onde cada parte do codigo fica, veja [docs/project-structure.md](docs/project-structure.md).
+
 Bem-vindo ao repositório do FuelMap Manaus. Este projeto utiliza o ecossistema robusto do **Expo** com backend incluso sendo executado concorrentemente.
 
 Para que tudo funcione de modo universal e fluido, siga este guia definitivo ao baixar o código em qualquer PC.

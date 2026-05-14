@@ -1,4 +1,4 @@
-import { ThemedView } from "@/components/themed-view";
+import { ThemedView } from "@/components/common/themed-view";
 import * as Api from "@/lib/_core/api";
 import * as Auth from "@/lib/_core/auth";
 import * as Linking from "expo-linking";

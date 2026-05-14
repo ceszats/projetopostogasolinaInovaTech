@@ -13,7 +13,7 @@ import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import Svg, { Polyline, Circle, Line, Text as SvgText } from 'react-native-svg';
 import { IconSymbol } from '@/components/ui/icon-symbol';
-import { useTheme } from '@/hooks/use-theme';
+import { useTheme } from '@/hooks/theme/use-theme';
 import { useApp } from '@/context/AppContext';
 import {
   STATIONS,
@@ -29,9 +29,9 @@ import {
   MANAUS_CENTER,
 } from '@/data/stations';
 import { trpc } from '@/lib/trpc';
-import { usePriceEngine } from '@/hooks/use-price-engine';
-import { useNearbyGeofence } from '@/hooks/use-nearby-geofence';
-import { PriceConfirmBanner } from '@/components/PriceConfirmBanner';
+import { usePriceEngine } from '@/hooks/fuel/use-price-engine';
+import { useNearbyGeofence } from '@/hooks/location/use-nearby-geofence';
+import { PriceConfirmBanner } from '@/components/fuel/PriceConfirmBanner';
 import * as Haptics from 'expo-haptics';
 
 const { width: SCREEN_WIDTH } = Dimensions.get('window');

@@ -1,9 +1,9 @@
 import React, { useCallback } from 'react';
 import { View, Text, Pressable, StyleSheet, ScrollView } from 'react-native';
-import { ScreenContainer } from '@/components/screen-container';
+import { ScreenContainer } from '@/components/layout/screen-container';
 import { IconSymbol } from '@/components/ui/icon-symbol';
-import { FuelTypeFilter } from '@/components/FuelTypeFilter';
-import { useColors } from '@/hooks/use-colors';
+import { FuelTypeFilter } from '@/components/fuel/FuelTypeFilter';
+import { useColors } from '@/hooks/theme/use-colors';
 import { useApp } from '@/context/AppContext';
 import { useRouter } from 'expo-router';
 import {
