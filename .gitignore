@@ -35,6 +35,8 @@ yarn-error.*
 .env*.local
 
 # markdown docs
+security.md
+docs/security.md
 seguranca.md
 design_system.md
 *.md
