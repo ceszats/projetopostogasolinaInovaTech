@@ -69,4 +69,3 @@ Pressionando a respectiva tecla no seu terminal quando rodar pnpm run dev, reaç
 
 ---
 
-> Ambiente moldado profissionalmente, independente de PC ou Sistema Operacional, seu código é blindado para iniciar estavelmente e não requerer "gambiarras".
