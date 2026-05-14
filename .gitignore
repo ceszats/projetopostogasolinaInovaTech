@@ -34,6 +34,12 @@ yarn-error.*
 .env
 .env*.local
 
+# markdown docs
+seguranca.md
+design_system.md
+*.md
+!README.md
+
 # database
 *.sqlite
 drizzle/db.sqlite
