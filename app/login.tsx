@@ -38,7 +38,7 @@ export default function LoginScreen() {
     if (Platform.OS !== 'web') Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
 
     try {
-      await startOAuthLogin();
+      await startOAuthLogin(provider);
       // startOAuthLogin redirects away or opens a web browser,
       // the callback will be handled by app/oauth/callback.tsx
     } catch (err) {
@@ -153,6 +153,7 @@ export default function LoginScreen() {
         </View>
 
         {/* Skip login */}
+        {__DEV__ ? (
         <Pressable
           onPress={() => {
             // Define um usuário demo para que o AuthGuard não redirecione de volta para o login
@@ -168,6 +169,7 @@ export default function LoginScreen() {
         >
           <Text style={[styles.skipButtonText, { color: colors.muted }]}>Entrar sem login</Text>
         </Pressable>
+        ) : null}
       </ScrollView>
     </ScreenContainer>
   );

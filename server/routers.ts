@@ -4,6 +4,15 @@ import { getSessionCookieOptions } from "./_core/cookies";
 import { systemRouter } from "./_core/systemRouter";
 import { publicProcedure, protectedProcedure, router } from "./_core/trpc";
 import * as db from "./db";
+import { STATIONS } from "../data/stations";
+
+const stationIds = new Set(STATIONS.map((station) => station.id));
+const priceSchema = z.coerce
+  .number()
+  .min(3, "Preco abaixo do esperado")
+  .max(12, "Preco acima do esperado")
+  .refine((value) => Number.isFinite(value), "Preco invalido")
+  .refine((value) => /^\d+(\.\d{1,3})?$/.test(String(value)), "Use ate 3 casas decimais");
 
 export const appRouter = router({
   // if you need to use socket.io, read and register route in server/_core/index.ts, all api should start with '/api/' so that the gateway can route correctly
@@ -20,7 +29,7 @@ export const appRouter = router({
   }),
 
   oauth: router({
-    getOrCreateUser: publicProcedure
+    getOrCreateUser: protectedProcedure
       .input(
         z.object({
           provider: z.enum(["google", "facebook"]),
@@ -64,9 +73,9 @@ export const appRouter = router({
     add: protectedProcedure
       .input(
         z.object({
-          stationId: z.string(),
+          stationId: z.string().refine((id) => stationIds.has(id), "Posto nao encontrado"),
           fuelType: z.enum(["gasolina", "aditivada", "etanol", "diesel", "gnv"]),
-          price: z.string().or(z.number()),
+          price: priceSchema,
         })
       )
       .mutation(async ({ ctx, input }) => {
@@ -74,7 +83,7 @@ export const appRouter = router({
           userId: ctx.user.id,
           stationId: input.stationId,
           fuelType: input.fuelType,
-          price: String(input.price),
+          price: input.price.toFixed(3).replace(/0+$/, "").replace(/\.$/, ""),
         });
 
         if (!id) {

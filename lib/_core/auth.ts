@@ -20,12 +20,7 @@ export async function getSessionToken(): Promise<string | null> {
     }
 
     // Use SecureStore for native
-    console.log("[Auth] Getting session token...");
     const token = await SecureStore.getItemAsync(SESSION_TOKEN_KEY);
-    console.log(
-      "[Auth] Session token retrieved from SecureStore:",
-      token ? `present (${token.substring(0, 20)}...)` : "missing",
-    );
     return token;
   } catch (error) {
     console.error("[Auth] Failed to get session token:", error);
@@ -42,7 +37,6 @@ export async function setSessionToken(token: string): Promise<void> {
     }
 
     // Use SecureStore for native
-    console.log("[Auth] Setting session token...", token.substring(0, 20) + "...");
     await SecureStore.setItemAsync(SESSION_TOKEN_KEY, token);
     console.log("[Auth] Session token stored in SecureStore successfully");
   } catch (error) {
@@ -85,9 +79,7 @@ export async function getUserInfo(): Promise<User | null> {
       console.log("[Auth] No user info found");
       return null;
     }
-    const user = JSON.parse(info);
-    console.log("[Auth] User info retrieved:", user);
-    return user;
+    return JSON.parse(info);
   } catch (error) {
     console.error("[Auth] Failed to get user info:", error);
     return null;
@@ -96,8 +88,6 @@ export async function getUserInfo(): Promise<User | null> {
 
 export async function setUserInfo(user: User): Promise<void> {
   try {
-    console.log("[Auth] Setting user info...", user);
-
     if (Platform.OS === "web") {
       // Use localStorage for web
       window.localStorage.setItem(USER_INFO_KEY, JSON.stringify(user));

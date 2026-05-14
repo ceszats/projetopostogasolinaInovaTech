@@ -4,8 +4,10 @@ import { createServer } from "http";
 import net from "net";
 import { createExpressMiddleware } from "@trpc/server/adapters/express";
 import { registerOAuthRoutes } from "./oauth";
+import { registerSocialOAuthRoutes } from "./socialOAuth";
 import { appRouter } from "../routers";
 import { createContext } from "./context";
+import { getAllowedOrigins, rateLimit, securityHeaders } from "./security";
 
 function isPortAvailable(port: number): Promise<boolean> {
   return new Promise((resolve) => {
@@ -29,21 +31,19 @@ async function findAvailablePort(startPort: number = 3000): Promise<number> {
 async function startServer() {
   const app = express();
   const server = createServer(app);
+  const isDev = process.env.NODE_ENV !== "production";
+
+  app.use(securityHeaders);
 
   // Enable CORS for all routes
   app.use((req, res, next) => {
     const origin = req.headers.origin;
     
-    // In production, you MUST restrict this to your actual domains.
-    // For development, we allow localhost/LAN.
-    const isDev = process.env.NODE_ENV !== "production";
-    
     if (origin) {
       if (isDev) {
         res.header("Access-Control-Allow-Origin", origin);
       } else {
-        // TODO: Replace with your actual production domain
-        const allowedOrigins = [process.env.EXPO_WEB_PREVIEW_URL, "https://fuelmapmanaus.com"];
+        const allowedOrigins = getAllowedOrigins();
         if (allowedOrigins.includes(origin)) {
           res.header("Access-Control-Allow-Origin", origin);
         }
@@ -67,11 +67,16 @@ async function startServer() {
   // Reduced limit to prevent DoS attacks via huge JSON payloads
   app.use(express.json({ limit: "2mb" }));
   app.use(express.urlencoded({ limit: "2mb", extended: true }));
+  app.use("/api/auth", rateLimit({ windowMs: 60_000, max: 30 }));
+  app.use("/api/oauth", rateLimit({ windowMs: 60_000, max: 20 }));
+  app.use("/api/trpc", rateLimit({ windowMs: 60_000, max: 120 }));
 
   registerOAuthRoutes(app);
+  registerSocialOAuthRoutes(app);
 
   // --- MOCK OAUTH PORTAL ---
-  app.get("/app-auth", (req, res) => {
+  if (isDev) {
+    app.get("/app-auth", (req, res) => {
     const { redirectUri, state } = req.query;
     res.send(`
       <html>
@@ -105,28 +110,29 @@ async function startServer() {
         </body>
       </html>
     `);
-  });
+    });
 
   // --- MOCK OAUTH API ENDPOINTS ---
-  app.post("/webdev.v1.WebDevAuthPublicService/ExchangeToken", (req, res) => {
-    res.json({
-      accessToken: "mock_access_token_" + Date.now(),
-      tokenType: "Bearer",
-      expiresIn: 3600
+    app.post("/webdev.v1.WebDevAuthPublicService/ExchangeToken", (req, res) => {
+      res.json({
+        accessToken: "mock_access_token_" + Date.now(),
+        tokenType: "Bearer",
+        expiresIn: 3600
+      });
     });
-  });
 
-  app.post("/webdev.v1.WebDevAuthPublicService/GetUserInfo", (req, res) => {
-    const authHeader = req.headers.authorization || "";
-    const isGoogle = authHeader.includes("google") || JSON.stringify(req.body).includes("google");
-    
-    res.json({
-      openId: isGoogle ? "google-mock-id-123" : "facebook-mock-id-456",
-      name: isGoogle ? "Teste Google" : "Teste Facebook",
-      email: isGoogle ? "google@teste.com" : "facebook@teste.com",
-      platform: isGoogle ? "google" : "facebook"
+    app.post("/webdev.v1.WebDevAuthPublicService/GetUserInfo", (req, res) => {
+      const authHeader = req.headers.authorization || "";
+      const isGoogle = authHeader.includes("google") || JSON.stringify(req.body).includes("google");
+
+      res.json({
+        openId: isGoogle ? "google-mock-id-123" : "facebook-mock-id-456",
+        name: isGoogle ? "Teste Google" : "Teste Facebook",
+        email: isGoogle ? "google@teste.com" : "facebook@teste.com",
+        platform: isGoogle ? "google" : "facebook"
+      });
     });
-  });
+  }
 
   app.get("/api/health", (_req, res) => {
     res.json({ ok: true, timestamp: Date.now() });

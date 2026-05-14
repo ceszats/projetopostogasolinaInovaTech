@@ -78,9 +78,20 @@ export const getRedirectUri = () => {
   }
 };
 
-export const getLoginUrl = () => {
-  const redirectUri = getRedirectUri();
+type OAuthProvider = "google" | "facebook";
+
+export const getLoginUrl = (provider?: OAuthProvider) => {
+  const redirectUri =
+    provider && ReactNative.Platform.OS === "web" && typeof window !== "undefined"
+      ? `${window.location.origin}/oauth/callback`
+      : getRedirectUri();
   const state = encodeState(redirectUri);
+
+  if (provider === "google" || provider === "facebook") {
+    const url = new URL(`${getApiBaseUrl()}/api/oauth/${provider}/start`);
+    url.searchParams.set("redirectUri", redirectUri);
+    return url.toString();
+  }
 
   const url = new URL(`${OAUTH_PORTAL_URL}/app-auth`);
   url.searchParams.set("appId", APP_ID);
@@ -101,8 +112,8 @@ export const getLoginUrl = () => {
  *
  * @returns Always null, the callback is handled via deep link.
  */
-export async function startOAuthLogin(): Promise<string | null> {
-  const loginUrl = getLoginUrl();
+export async function startOAuthLogin(provider?: OAuthProvider): Promise<string | null> {
+  const loginUrl = getLoginUrl(provider);
 
   if (ReactNative.Platform.OS === "web") {
     // On web, just redirect
