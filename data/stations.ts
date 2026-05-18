@@ -46,12 +46,15 @@ const normalizeSearchText = (value: string) =>
   value
     .normalize('NFD')
     .replace(/[\u0300-\u036f]/g, '')
+    .replace(/[^a-zA-Z0-9]+/g, ' ')
     .toLowerCase()
+    .replace(/\s+/g, ' ')
     .trim();
 
 const MANAUS_NEIGHBORHOOD_CENTERS = [
   { name: 'Centro', latitude: -3.1342, longitude: -60.0233 },
   { name: 'Adrianopolis', latitude: -3.1038, longitude: -60.0037 },
+  { name: 'Nossa Senhora das Gracas', latitude: -3.1054, longitude: -60.0231 },
   { name: 'Aleixo', latitude: -3.0806, longitude: -59.9914 },
   { name: 'Parque 10 de Novembro', latitude: -3.0742, longitude: -60.0148 },
   { name: 'Chapada', latitude: -3.0912, longitude: -60.0237 },
@@ -90,6 +93,9 @@ const MANAUS_NEIGHBORHOOD_CENTERS = [
 ] as const;
 
 const ADDRESS_NEIGHBORHOODS: Array<{ match: string; neighborhood: string }> = [
+  { match: 'nossa sra das gracas', neighborhood: 'Nossa Senhora das Gracas' },
+  { match: 'nossa senhora das gracas', neighborhood: 'Nossa Senhora das Gracas' },
+  { match: 'djalma batista 535', neighborhood: 'Nossa Senhora das Gracas' },
   { match: 'avenida tancredo neves', neighborhood: 'Parque 10 de Novembro' },
   { match: 'avenida cosme ferreira', neighborhood: 'Sao Jose Operario' },
   { match: 'avenida arquiteto jose henriques bento rodrigues', neighborhood: 'Monte das Oliveiras' },
@@ -2195,7 +2201,7 @@ const RAW_STATIONS: Station[] = [
     "name": "Posto Petrobras Djalma ",
     "brand": "BR",
     "address": "Av.Djalma Batista,535 - Nossa Sra. das Graças, Manaus - AM, 69053-355",
-    "neighborhood": "Manaus",
+    "neighborhood": "Nossa Senhora das Gracas",
     "latitude": -3.1053934 ,
     "longitude": -60.0230559,
     "prices": [
