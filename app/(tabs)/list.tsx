@@ -18,7 +18,6 @@ import { useTheme } from '@/hooks/theme/use-theme';
 import { useApp } from '@/context/AppContext';
 import { useRouter } from 'expo-router';
 import {
-  STATIONS,
   MANAUS_CENTER,
   calculateDistance,
   getPriceCategory,
@@ -63,12 +62,12 @@ export default function ListScreen() {
   const userLon = state.userLocation?.longitude ?? MANAUS_CENTER.longitude;
 
   const stationsWithDistance = useMemo(() => {
-    return STATIONS.map(s => ({
+    return state.stations.map(s => ({
       ...s,
       distance: calculateDistance(userLat, userLon, s.latitude, s.longitude),
       isFavorite: state.favoriteIds.includes(s.id),
     }));
-  }, [userLat, userLon, state.favoriteIds]);
+  }, [userLat, userLon, state.favoriteIds, state.stations]);
 
   const neighborhoodChips = useMemo(() => {
     const counts = stationsWithDistance.reduce<Record<string, number>>((acc, station) => {

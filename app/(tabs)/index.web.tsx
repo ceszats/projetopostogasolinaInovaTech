@@ -7,7 +7,6 @@ import { useColors } from '@/hooks/theme/use-colors';
 import { useApp } from '@/context/AppContext';
 import { useRouter } from 'expo-router';
 import {
-  STATIONS,
   getPriceCategory,
   getPriceCategoryColor,
   formatTimeAgo,
@@ -26,9 +25,9 @@ export default function MapScreenWeb() {
   const fuelType = state.selectedFuelType;
   const filteredStations = useMemo(() => {
     const query = searchQuery.trim();
-    if (!query) return STATIONS;
-    return STATIONS.filter((station) => stationMatchesSearch(station, query));
-  }, [searchQuery]);
+    if (!query) return state.stations;
+    return state.stations.filter((station) => stationMatchesSearch(station, query));
+  }, [searchQuery, state.stations]);
 
   const handleFuelSelect = useCallback((type: FuelType) => {
     dispatch({ type: 'SET_FUEL_TYPE', fuelType: type });

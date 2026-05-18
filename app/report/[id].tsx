@@ -14,7 +14,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { IconSymbol } from '@/components/ui/icon-symbol';
 import { useColors } from '@/hooks/theme/use-colors';
 import { useApp } from '@/context/AppContext';
-import { STATIONS, FuelType, FUEL_TYPE_LABELS, FUEL_TYPE_ICONS } from '@/data/stations';
+import { FuelType, FUEL_TYPE_LABELS, FUEL_TYPE_ICONS } from '@/data/stations';
 import * as Haptics from 'expo-haptics';
 
 const FUEL_TYPES: FuelType[] = ['gasolina', 'aditivada', 'etanol', 'diesel', 'gnv'];
@@ -26,7 +26,7 @@ export default function ReportPriceScreen() {
   const colors = useColors();
   const { state, dispatch } = useApp();
 
-  const station = STATIONS.find(s => s.id === id);
+  const station = state.stations.find(s => s.id === id);
   const [selectedFuel, setSelectedFuel] = useState<FuelType>('gasolina');
   const [priceInput, setPriceInput] = useState('');
   const [submitted, setSubmitted] = useState(false);

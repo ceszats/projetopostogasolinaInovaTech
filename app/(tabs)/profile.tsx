@@ -18,7 +18,7 @@ import { GamificationBadge } from '@/components/gamification/GamificationBadge';
 import { useTheme } from '@/hooks/theme/use-theme';
 import { trpc } from '@/lib/trpc';
 import { useApp, PriceAlert } from '@/context/AppContext';
-import { STATIONS, FuelType, FUEL_TYPE_LABELS, FUEL_TYPE_ICONS, stationMatchesSearch } from '@/data/stations';
+import { FuelType, FUEL_TYPE_LABELS, FUEL_TYPE_ICONS, stationMatchesSearch } from '@/data/stations';
 import { useColorScheme } from '@/hooks/theme/use-color-scheme';
 import { useThemeContext } from '@/lib/theme-provider';
 
@@ -53,15 +53,15 @@ export default function ProfileScreen() {
 
   // Postos para o picker de alerta — favoritos primeiro
   const stationsForAlertPicker = useMemo(() => {
-    const matched = STATIONS.filter(s => stationMatchesSearch(s, stationSearch));
+    const matched = state.stations.filter(s => stationMatchesSearch(s, stationSearch));
     return matched.sort((a, b) => {
       const aFav = state.favoriteIds.includes(a.id) ? 0 : 1;
       const bFav = state.favoriteIds.includes(b.id) ? 0 : 1;
       return aFav - bFav;
     });
-  }, [stationSearch, state.favoriteIds]);
+  }, [stationSearch, state.favoriteIds, state.stations]);
 
-  const selectedAlertStation = alertStationId ? STATIONS.find(s => s.id === alertStationId) : null;
+  const selectedAlertStation = alertStationId ? state.stations.find(s => s.id === alertStationId) : null;
 
   const handleCreateAlert = () => {
     const price = parseFloat(alertPrice.replace(',', '.'));
@@ -174,7 +174,7 @@ export default function ProfileScreen() {
             </View>
           ) : (
             alerts.map(alert => {
-              const station = alert.stationId ? STATIONS.find(s => s.id === alert.stationId) : null;
+              const station = alert.stationId ? state.stations.find(s => s.id === alert.stationId) : null;
               return (
                 <View
                   key={alert.id}
@@ -214,7 +214,7 @@ export default function ProfileScreen() {
           <View style={styles.section}>
             <Text style={[styles.sectionTitle, { color: colors.foreground }]}>Contribuições Recentes</Text>
             {contributions.slice(0, 5).map((c, i) => {
-              const station = STATIONS.find(s => s.id === c.stationId);
+              const station = state.stations.find(s => s.id === c.stationId);
               return (
                 <View
                   key={i}

@@ -15,7 +15,6 @@ import { useTheme } from '@/hooks/theme/use-theme';
 import { useApp } from '@/context/AppContext';
 import { useRouter } from 'expo-router';
 import {
-  STATIONS,
   MANAUS_CENTER,
   getPriceCategory,
   getPriceCategoryColor,
@@ -43,9 +42,9 @@ export default function MapScreen() {
   const fuelType = state.selectedFuelType;
   const filteredStations = React.useMemo(() => {
     const query = searchQuery.trim();
-    if (!query) return STATIONS;
-    return STATIONS.filter((station) => stationMatchesSearch(station, query));
-  }, [searchQuery]);
+    if (!query) return state.stations;
+    return state.stations.filter((station) => stationMatchesSearch(station, query));
+  }, [searchQuery, state.stations]);
   const cheapestStation = React.useMemo(() => {
     return filteredStations
       .filter((station) => station.prices.some((price) => price.type === fuelType))
