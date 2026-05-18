@@ -2189,6 +2189,42 @@ const RAW_STATIONS: Station[] = [
     "amenities": [
       "Conveniência"
     ]
+  },
+   {
+    "id": "osm-1366693708",
+    "name": "Posto Petrobras Djalma ",
+    "brand": "BR",
+    "address": "Av.Djalma Batista,535 - Nossa Sra. das Graças, Manaus - AM, 69053-355",
+    "neighborhood": "Manaus",
+    "latitude": -3.1053934 ,
+    "longitude": -60.0230559,
+    "prices": [
+      {
+        "type": "gasolina",
+        "price": 6.34,
+        updatedAt: new Date("2026-04-09T08:29:09.145Z"),
+        "confirmations": 2
+      },
+      {
+        "type": "aditivada",
+        "price": 6.64,
+        updatedAt: new Date("2026-04-09T08:29:09.145Z"),
+        "confirmations": 2
+      },
+      {
+        "type": "etanol",
+        "price": 4.54,
+        updatedAt: new Date("2026-04-09T04:29:09.145Z"),
+        "confirmations": 3
+      }
+    ],
+    "reviews": [],
+    "priceHistory": {
+      "gasolina": []
+    },
+    "amenities": [
+      "Conveniência"
+    ]
   }
 ];
 
